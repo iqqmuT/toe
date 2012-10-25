@@ -1,0 +1,18 @@
+<?php
+
+$cfg = array();
+
+// --------------------------------------------------------------
+// Mapnik
+// --------------------------------------------------------------
+
+// Mapnik directory
+$cfg['mapnik_home'] = '';
+
+// path to $TOE/export/mapnik/render.py
+$cfg['mapnik_bin'] = '';
+
+// archive sqlite file
+$cfg['archive_db'] = 'db/archive.sqlite';
+
+?>

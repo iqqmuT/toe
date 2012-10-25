@@ -1,0 +1,33 @@
+body {
+  font-size: 12px;
+  font-family: times, serif;
+}
+
+.map {
+  border: 1px solid #909090;
+  width: 1400px;
+  height: 830px;
+  page: land;
+}
+
+.poi-list {
+  margin: 0px;
+  padding: 0px;
+  page-break-before: always;
+}
+
+.poi-list li {
+  margin: 2px;
+  padding: 1px;
+  list-style: none;
+}
+
+.poi-list li.even {
+  background-color: #eee;
+}
+
+.poi-list .label {
+  font-weight: bold;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+}
