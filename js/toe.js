@@ -732,7 +732,7 @@ toe.command = {
   redoHistory: []
 };
 
-toe.command.execute = function(cmd) {
+toe.command.executed = function(cmd) {
   this.undoHistory.push(cmd);
   this.redoHistory = [];
 };
@@ -753,27 +753,37 @@ toe.command.redo = function() {
   }
 };
 
+// Add new border
 toe.command.AddNewBorder = function(area, latLng) {
   this.area = area;
   this.latLng = latLng;
   this.area.addNewBorder(this.latLng);
-  toe.command.execute(this);
+  toe.command.executed(this);
 };
 
-//toe.command.AddNewBorder.prototype.execute = function() {
-//  console.log('exec');
-//};
-
 toe.command.AddNewBorder.prototype.undo = function() {
-  console.log('undo');
   toe.BoundaryManager.remove(this.latLng, this.area);
 };
 
 toe.command.AddNewBorder.prototype.redo = function() {
-  console.log('redo');
   this.area.addNewBorder(this.latLng);
 };
 
+// Remove border
+toe.command.RemoveBorder = function(area, latLng) {
+  this.area = area;
+  this.latLng = latLng;
+  toe.BoundaryManager.remove(this.latLng, this.area);
+  toe.command.executed(this);
+};
+
+toe.command.RemoveBorder.prototype.undo = function() {
+  this.area.addNewBorder(this.latLng);
+};
+
+toe.command.RemoveBorder.prototype.redo = function() {
+  toe.BoundaryManager.remove(this.latLng, this.area);
+};
 
 
 // ------------------------------------------------------------
@@ -1149,10 +1159,12 @@ toe.Boundary.prototype.linkTo = function(area) {
 toe.Boundary.prototype.unlink = function(area) {
   console.log("boundary.remove(", area, ")");
   var new_areas = [];
-  for (var i in this.areas) {
+  for (var i = 0; i < this.areas.length; i++) {
     if (!area || (area && this.areas[i] == area)) {
       if (this.areas[i].polygon.removeFromPath(this.latLng)) {
         this.areas[i].changed = true;
+        // remove marker if visible
+        this.areas[i].removeBorderMarker(this.latLng);
       }
       /*
       var path = this.areas[i].polygon.getPath();
@@ -1484,8 +1496,8 @@ toe.Area.prototype._showBorderMarker = function(latLng) {
   marker.setDoubleClick(function(event) {
     //if (boundary && shift_is_down) {
     if (boundary) {
-      toe.BoundaryManager.remove(boundary.latLng, self);
-      marker.remove();
+      new toe.command.RemoveBorder(self, boundary.latLng);
+      //marker.remove();
       //if (area.polygon.path.getLength == 0) {
       //console.log("we should destroy the area now!");
       //}
@@ -1512,6 +1524,19 @@ toe.Area.prototype.removeDuplicateMarkers = function() {
     }
   }
   return false; // no dups
+};
+
+/**
+ * Removes border marker by given latLng.
+ */
+toe.Area.prototype.removeBorderMarker = function(latLng) {
+  for (var i = 0; i < this.border_markers.length; i++) {
+    var pos = this.border_markers[i].getToeLatLng();
+    if (latLng.equals(pos)) {
+      this.border_markers[i].remove();
+      this.border_markers.splice(i, 1);
+    }
+  }
 };
 
 /**
