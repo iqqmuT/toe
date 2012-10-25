@@ -28,6 +28,7 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
 <html lang="<? print $lang; ?>">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+    <link rel="icon" type="image/png" href="images/toe-icon.png" />
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link type="text/css" href="css/ui-darkness/jquery-ui-1.8.23.custom.css" rel="stylesheet" />
