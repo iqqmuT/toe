@@ -16,4 +16,10 @@ $cfg['mapnik_styles'] = array(
     'default' => 'Default'
 );
 
+// --------------------------------------------------------------
+// Area archive SQLite file, make sure web user has write access
+// into it.
+// --------------------------------------------------------------
+$cfg['archive_file'] = 'db/archive.sqlite';
+
 ?>

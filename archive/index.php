@@ -19,10 +19,11 @@
  *
  */
 
-include("archive.php");
+chdir("..");
+include("config.php");
+include("archive/archive.php");
 
-$archive_file = '/tmp/archive.sqlite';
-$archive = new Archive($archive_file);
+$archive = new Archive($cfg['archive_file']);
 
 if (isset($_POST['data'])) {
     // write
@@ -32,7 +33,6 @@ if (isset($_POST['data'])) {
 elseif (isset($_GET['id'])) {
     // read
     $id = $_GET['id'];
-    // header("Content-Type: " . $this->getFiletype());
     print $archive->read($id);
 }
 
