@@ -732,7 +732,8 @@ toe.command = {
   redoHistory: []
 };
 
-toe.command.executed = function(cmd) {
+// appends command to undo history
+toe.command.append = function(cmd) {
   this.undoHistory.push(cmd);
   this.redoHistory = [];
 };
@@ -748,43 +749,62 @@ toe.command.undo = function() {
 toe.command.redo = function() {
   var cmd = this.redoHistory.pop();
   if (cmd) {
-    cmd.redo();
+    cmd.execute();
     this.undoHistory.push(cmd);
   }
 };
 
-// Add new border
-toe.command.AddNewBorder = function(area, latLng) {
+// Create area
+toe.command.CreateArea = function(area, latLng) {
   this.area = area;
   this.latLng = latLng;
-  this.area.addNewBorder(this.latLng);
-  toe.command.executed(this);
+  this.execute(true);
+  toe.command.append(this);
 };
 
-toe.command.AddNewBorder.prototype.undo = function() {
-  toe.BoundaryManager.remove(this.latLng, this.area);
+toe.command.CreateArea.prototype.execute = function(init) {
+  toe.AreaManager.add(this.area);
+  //if (!init)
+  //  this.area.addBorder(this.latLng);
+  this.area.show();
+  this.area.activate();
 };
 
-toe.command.AddNewBorder.prototype.redo = function() {
-  this.area.addNewBorder(this.latLng);
+toe.command.CreateArea.prototype.undo = function() {
+  toe.AreaManager.remove(this.area);
+};
+
+// Add new border
+toe.command.AddBorder = function(area, latLng) {
+  this.area = area;
+  this.latLng = latLng;
+  this.execute();
+  toe.command.append(this);
+};
+
+toe.command.AddBorder.prototype.execute = function() {
+  this.area.addBorder(this.latLng);
+};
+
+toe.command.AddBorder.prototype.undo = function() {
+  toe.BoundaryManager.removeByLatLng(this.latLng, this.area);
 };
 
 // Remove border
 toe.command.RemoveBorder = function(area, latLng) {
   this.area = area;
   this.latLng = latLng;
-  toe.BoundaryManager.remove(this.latLng, this.area);
-  toe.command.executed(this);
+  this.execute();
+  toe.command.append(this);
+};
+
+toe.command.RemoveBorder.prototype.execute = function() {
+  toe.BoundaryManager.removeByLatLng(this.latLng, this.area);
 };
 
 toe.command.RemoveBorder.prototype.undo = function() {
-  this.area.addNewBorder(this.latLng);
+  this.area.addBorder(this.latLng);
 };
-
-toe.command.RemoveBorder.prototype.redo = function() {
-  toe.BoundaryManager.remove(this.latLng, this.area);
-};
-
 
 // ------------------------------------------------------------
 // Handler
@@ -798,7 +818,7 @@ toe.handler = {
     if (shift_is_down) {
       if (areas.active_area) {
         console.log("ADD TO AREA ", areas.active_area);
-        areas.active_area.addNewBorder(event);
+        areas.active_area.addBorder(event);
       } else {
         // create a new area
         console.log("CREATE NEW AREA!");
@@ -870,17 +890,22 @@ toe.AreaManager = new function() {
     console.log("AREAS:MAP DBL CLICKED", event);
     clearTimeout(click_timeout);
     if (self.active_area) {
+      // add new border to active area
       console.log("ADD TO AREA ", self.active_area);
       var latLng = toe.map.getEventLatLng(event);
-      new toe.command.AddNewBorder(self.active_area, latLng);
-      //self.active_area.addNewBorder(latLng);
+      new toe.command.AddBorder(self.active_area, latLng);
+      //self.active_area.addBorder(latLng);
     } else {
       // create a new area
       console.log("CREATE NEW AREA!", toe.map.getEventLatLng(event));
-      var area = new toe.Area(self.get_new_id(), '', '', [ toe.map.getEventLatLng(event) ]);
-      self.add(area);
-      area.show();
-      area.activate();
+      //var areaId = self.get_new_id();
+      //var latLng = toe.map.getEventLatLng(event);
+      var latLng = toe.map.getEventLatLng(event);
+      var area = new toe.Area(self.get_new_id(), '', '', [ latLng ]);
+      new toe.command.CreateArea(area, latLng);
+      //self.add(area);
+      //area.show();
+      //area.activate();
     }
 
   };
@@ -1044,23 +1069,27 @@ toe.BoundaryManager = new function() {
   var self = this;
   this.boundaries_arr = [];
 
-  // returns boundary by given latLng, or null
+  // returns array of boundaries by given latLng
   this.find = function(latLng) {
+    var result = [];
     for (var i = 0; i < this.boundaries_arr.length; i++) {
       if (this.boundaries_arr[i].latLng.equals(latLng))
-        return this.boundaries_arr[i];
+        result.push(this.boundaries_arr[i]);
     }
-    return null;
+    return result;
   };
 
   this.add = function(latLng, area) {
     // see if this is already exists in boundaries array
     console.log("BoundaryManager.add(", latLng, area, ")");
-    var boundary = this.find(latLng);
-    if (!boundary) {
+    var boundaries = this.find(latLng);
+    if (!boundaries.length) {
       // create a new boundary
-      boundary = new toe.Boundary(latLng);
+      var boundary = new toe.Boundary(latLng);
       this.boundaries_arr.push(boundary);
+    }
+    else {
+      boundary = boundaries[0];
     }
     // link given area to boundary
     boundary.linkTo(area);
@@ -1069,20 +1098,32 @@ toe.BoundaryManager = new function() {
   // if area given, remove only given area from boundary
   // else remove whole boundary (remove boundaries that don't belong
   // to any area anyway)
-  this.remove = function(latLng, area) {
+  this.removeByLatLng = function(latLng, area) {
     console.log("BoundaryManager.remove(", latLng, area, ")");
-    var boundary = this.find(latLng);
-    if (boundary) {
-      boundary.unlink(area);
-      if (boundary.empty()) {
-        console.log("boundary is EMPTY!");
-        // we no longer need this boundary, last link to area was gone
-        for (var i = 0; i < this.boundaries_arr.length; i++) {
-          if (this.boundaries_arr[i] == boundary) {
-            this.boundaries_arr.splice(i, 1); // remove this from array
-            delete boundary;
-            return;
-          }
+    var boundaries = this.find(latLng);
+    if (boundaries.length) {
+      for (var i = 0; i < boundaries.length; i++) {
+        this.remove(boundaries[i], area);
+      }
+    }
+  };
+  /**
+   * Remove given boundary.
+   * If area given, remove only given area from boundary.
+   * When boundary does not belong to any area anymore,
+   * it can be removed.
+   */
+  this.remove = function(boundary, area) {
+    console.log("BoundaryManager.removeBoundary(", boundary, area, ")");
+    boundary.unlink(area);
+    if (boundary.empty()) {
+      console.log("boundary is EMPTY!");
+      // we no longer need this boundary, last link to area was gone
+      for (var i = 0; i < this.boundaries_arr.length; i++) {
+        if (this.boundaries_arr[i] == boundary) {
+          this.boundaries_arr.splice(i, 1); // remove this from array
+          delete boundary;
+          break;
         }
       }
     }
@@ -1099,8 +1140,10 @@ toe.BoundaryManager = new function() {
           // copy areas from other boundary
           boundary.areas.push(other_boundary.areas[j]);
         }
-        delete other_boundary; // remove other boundary
+        //  remove boundary
+        //this.remove(other_boundary);
         this.boundaries_arr.splice(i, 1);
+        delete other_boundary;
         return true; // merged 
       }
     }
@@ -1126,32 +1169,23 @@ toe.Boundary.prototype.move = function(latLng, area) {
       if (this.areas[i].polygon.changePath(this.latLng, latLng)) {
         this.areas[i].changed = true;
       }
-      /*
-      var path = this.areas[i].polygon.getPath();
-      for (var j = 0; j < path.getLength(); j++) {
-        if (path.getAt(j).equals(this.latLng)) {
-          path.setAt(j, latLng); // update polygon path
-          this.areas[i].changed = true;
-          break; // go to next area
-        }
-      }*/
     }
   } // for
   this.latLng = latLng; //  update our information at last
 };
 
-// add this boundary to a area
+
+/**
+ * Links boundary to given area.
+ * If area was new for this boundary, returns true.
+ */
 toe.Boundary.prototype.linkTo = function(area) {
-  // see if this boundary is already linked to given area
-  var i = 0;
-  for (i = 0; i < this.areas.length; i++) {
-    if (this.areas[i] == area)
-      break;
-  }
-  if (i == this.areas.length) {
+  if (!this.hasArea(area)) {
     // given area was new for this boundary
     this.areas.push(area);
+    return true;
   }
+  return false;
 };
 
 // if area is not given, remove this boundary from all areas
@@ -1205,6 +1239,40 @@ toe.Boundary.prototype.findNearBoundary = function(range) {
     }
   }
   return null;
+};
+
+/**
+ * Merges given boundary into this boundary.
+ * Given boundary should have same latLng.
+ * Removes given boundary.
+ */
+toe.Boundary.prototype.merge = function(boundary) {
+  console.log('Boundary.merge()', this.areas);
+  boundary.move(this.latLng);
+  var unlinkAreas = [];
+  // add areas
+  for (var i = 0; i < boundary.areas.length; i++) {
+    var added = this.linkTo(boundary.areas[i]);
+    if (!added) {
+      unlinkAreas.push(boundary.areas[i]);
+    }
+  }
+  for (var i = 0; i < unlinkAreas.length; i++) {
+    boundary.unlink(unlinkAreas[i]);
+  }
+  boundary.areas = [];
+  toe.BoundaryManager.remove(boundary);
+};
+
+/**
+ * Returns true if boundary has given area.
+ */
+toe.Boundary.prototype.hasArea = function(area) {
+  for (var i = 0; i < this.areas.length; i++) {
+    if (this.areas[i] == area)
+      return true;
+  }
+  return false;
 };
 
 // ------------------------------------------------------------
@@ -1285,8 +1353,8 @@ toe.Area.prototype.doubleClicked = function(event) {
   if (toe.control.Mode.selected == toe.control.Mode.AREA) {
     if (toe.AreaManager.active_area) {
       var latLng = toe.map.getEventLatLng(event);
-      new toe.command.AddNewBorder(toe.AreaManager.active_area, latLng);
-      //toe.AreaManager.active_area.addNewBorder(latLng);
+      new toe.command.AddBorder(toe.AreaManager.active_area, latLng);
+      //toe.AreaManager.active_area.addBorder(latLng);
     }
   }
 };
@@ -1300,14 +1368,21 @@ toe.Area.prototype.activate = function() {
 
   this.polygon.setColor(this.activated_options);
   //if (area_control.editable) {
-  if (true) {
-    // show markers yo
-    var path = this.polygon.getToePath();
-    for (var i = 0; i < path.length; i++) {
-      var c = path[i];
-      console.log(c);
-      this._showBorderMarker(c);
-    }
+  this._showMarkers();
+};
+
+/**
+ * Draws markers again.
+ */
+toe.Area.prototype.refreshMarkers = function() {
+  this._removeMarkers();
+  this._showMarkers();
+};
+
+toe.Area.prototype._showMarkers = function() {
+  var path = this.polygon.getToePath();
+  for (var i = 0; i < path.length; i++) {
+    this._showBorderMarker(path[i]);
   }
 };
 
@@ -1327,7 +1402,7 @@ toe.Area.prototype.deactivate = function() {
 
 // when user clicks the map with shift key,
 // he adds a new boundary for this area
-toe.Area.prototype.addNewBorder = function(latLng) {
+toe.Area.prototype.addBorder = function(latLng) {
   console.log("add new border: ", this.name, latLng);
 
   // edit polygon path
@@ -1349,7 +1424,7 @@ toe.Area.prototype.remove = function() {
   this._removeMarkers();
   var path = this.polygon.getToePath();
   for (var i = 0; i < path.length; i++) {
-    toe.BoundaryManager.remove(path[i], this);
+    toe.BoundaryManager.removeByLatLng(path[i], this);
   }
   toe.AreaManager.active_area = null;
 };
@@ -1436,8 +1511,9 @@ toe.Area.prototype._showBorderMarker = function(latLng) {
 
   var self = this;
   // marker drag functionality
-  var boundary = toe.BoundaryManager.find(latLng);
-  if (!boundary) console.log("FATAL ERROR: no boundary found for this marker!");
+  var boundaries = toe.BoundaryManager.find(latLng);
+  if (boundaries.length == 0) console.log("FATAL ERROR: no boundary found for this marker!");
+  var boundary = boundaries[0];
 
   var marker = new toe.map.AreaBorderMarker({
     position: latLng,
@@ -1474,21 +1550,24 @@ toe.Area.prototype._showBorderMarker = function(latLng) {
       boundary.move(latLng);
 
       if (toe.options.snap_boundaries > 0) {
-        // snap to another boundary within 5 px range
+        // snap to another boundary within some range
         var boundary_near = boundary.findNearBoundary(toe.options.snap_boundaries);
         if (boundary_near) { 
-          boundary.move(boundary_near.latLng);
+          boundary_near.merge(boundary);
           marker.setToeLatLng(boundary_near.latLng);
-          //console.log("NEAR: ", boundary_near);
+          boundary = boundary_near;
+          //boundary.merge(boundary_near);
+          //self.removeDuplicateMarkers();
         }
       }
 
       // try to merge this boundary if it snapped with other boundary
+      /*
       if (toe.BoundaryManager.mergeBoundary(boundary) === true) {
         // dragging ended so that we merged it with another
         // let's see if we have now two markers in the same place, if so, remove other
         self.removeDuplicateMarkers();
-      }
+      }*/
     }
   });
 
