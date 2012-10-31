@@ -19,7 +19,7 @@
   "map_size":          [ 144, 93 ],
   "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
   "area_border_width": 4,
-  "zoom":              0.3,
+  "zoom":              0.7,
   "orientation":       "auto",
   "qrcode":            true,
   "qrcode_margin":     [ 0, 0 ]
