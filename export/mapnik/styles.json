@@ -28,7 +28,7 @@
 "144x187": {
   "unit":              "mm",
   "paper_size":        [ 297, 210 ],
-  "margin":            [ 20, 10 ],
+  "margin":            [ 13, 13 ],
   "map_size":          [ 144, 187 ],
   "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
   "area_border_width": 4,
