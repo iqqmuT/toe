@@ -12,10 +12,11 @@
   "qrcode_margin":     [ 0, 0 ]
 },
 
-"s12": {
-  "paper_size":        [ 842, 595 ],
-  "margin":            [ 72, 72 ],
-  "map_size":          [ 397, 212 ],
+"144x93": {
+  "unit":              "mm",
+  "paper_size":        [ 297, 210 ],
+  "margin":            [ 20, 15 ],
+  "map_size":          [ 144, 93 ],
   "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
   "area_border_width": 4,
   "zoom":              0.3,
@@ -24,28 +25,17 @@
   "qrcode_margin":     [ 0, 0 ]
 },
 
-"s12-double": {
+"144x187": {
   "unit":              "mm",
   "paper_size":        [ 297, 210 ],
-  "margin":            [ 15, 15 ],
-  "map_size":          [ 140, 184 ],
+  "margin":            [ 20, 10 ],
+  "map_size":          [ 144, 187 ],
   "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
   "area_border_width": 4,
   "zoom":              0.7,
   "orientation":       "auto",
   "qrcode":            true,
-  "qrcode_margin":     [ 0, 0 ]
-},
-
-"s12-double-backup": {
-  "unit":              "cm",
-  "paper_size":        [ 842, 595 ],
-  "margin":            [ 72, 72 ],
-  "map_size":          [ 397, 424 ],
-  "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
-  "area_border_width": 4,
-  "zoom":              0.5,
-  "orientation":       "auto"
+  "qrcode_margin":     [ 1, 1 ]
 },
 
 "a4": {
