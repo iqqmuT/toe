@@ -34,8 +34,8 @@ toe.map = {
       center: center,
       mapTypeId: 'OSM',
       mapTypeControlOptions: {
-        mapTypeIds: ['OSM', google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID,
-          google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.TERRAIN ],
+        mapTypeIds: [ 'OSM', google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID,
+          google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.TERRAIN, 'EEQ' ],
         //style: google.maps.MapTypeControlStyle.DEFAULT
         style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
       },
@@ -62,6 +62,23 @@ toe.map = {
       maxZoom: 19
     });
     this.map.mapTypes.set('OSM', osm_map_type);
+
+    // Ecuador, Quito maps from EEQ
+    var eeq_map_type = new google.maps.ImageMapType({
+      getTileUrl: function(coord, zoom) {
+        var ymax = 1 << zoom;
+        var y = ymax - coord.y - 1;
+        return "http://tumppi.com/eeq/" +
+        zoom + "/" + coord.x + "/" + y + ".png";
+      },
+      tileSize: new google.maps.Size(256, 256),
+      isPng: true,
+      alt: "Empresa Eléctrica Quito",
+      name: "EEQ",
+      maxZoom: 17
+    });
+    this.map.mapTypes.set('EEQ', eeq_map_type);
+
     this.map.setMapTypeId('OSM');
 
     var $mode_div = toe.control.Mode.html();
