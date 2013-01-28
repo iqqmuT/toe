@@ -75,7 +75,7 @@ toe.map = {
       isPng: true,
       alt: "Empresa Eléctrica Quito",
       name: "EEQ",
-      maxZoom: 17
+      maxZoom: 18
     });
     this.map.mapTypes.set('EEQ', eeq_map_type);
 
