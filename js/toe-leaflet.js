@@ -399,6 +399,40 @@ toe.map.AreaBorderMarker.prototype.setToeLatLng = function(latLng) {
   this.setLatLng(latLng);
 };
 
+/**
+ * CurrentPositionMarker
+ */
+toe.map.CurrentPositionMarker = function(options) {
+  this.base = L.Circle;
+  var radius = options.radius;
+  this.base(options.position, radius, {
+    stroke: true,
+    color: '#00f',
+    weight: 2,
+    opacity: 0.5,
+    fill: true,
+    fillColor: '#00f',
+    fillOpacity: 0.2,
+    clickable: false
+  });
+  toe.map.map.addLayer(this);
+};
+
+toe.map.CurrentPositionMarker.prototype.__proto__ = L.Circle.prototype;
+
+toe.map.CurrentPositionMarker.prototype.hide = function() {
+  this.setOpacity(0);
+};
+toe.map.CurrentPositionMarker.prototype.show = function() {
+  this.setOpacity(1);
+};
+toe.map.CurrentPositionMarker.prototype.setToeLatLng = function(latLng) {
+  this.setLatLng(latLng);
+};
+toe.map.CurrentPositionMarker.prototype.setToeRadius = function(radius) {
+  this.setRadius(radius);
+};
+
 L.Control.MapMode = L.Control.extend({
   options: {
     position: 'topright'

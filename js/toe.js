@@ -43,7 +43,8 @@ var toe = {
     cookie_name: 'toe',        // cookie name
     cookie_expire_days: 30,    // cookie expire in days
     archive: null,             // open archive in read only mode
-    readonly: false
+    readonly: false,
+    geolocation_interval: 3000 // interval for getting current position
   },
 
   init: function(options) {
@@ -66,6 +67,9 @@ var toe = {
 
     if (options.archive)
       this._openArchive(options.archive);
+
+    if (this.options.geolocation_interval)
+      toe.CurrentPositionTracker.start();
   },
 
   hasUnsavedChanges: function() {
@@ -1680,10 +1684,66 @@ toe.helper = {
   }
 };
 
+// ------------------------------------------------------------
+// CurrentPositionTracker
+// ------------------------------------------------------------
+toe.CurrentPositionTracker = new function() {
+  var self = this;
+  var enabled = false;
+  var marker = null;
+  var watch_id = null;
 
+  var handlePosition = function(position) {
+    console.log(position);
+    var pos = new toe.map.LatLng(position.coords.latitude,
+                                 position.coords.longitude);
+    self.setPosition(pos, position.coords.accuracy);
+  };
 
-  // PRIVATE METHODS
-  // ---------------
+  // start tracking of current position
+  this.start = function() {
+    // try HTML5 geolocation
+    if (navigator.geolocation) {
+      enabled = true;
+      // start main loop
+      watch_id = navigator.geolocation.watchPosition(handlePosition, function() {
+        // error with tracking
+        enabled = false;
+      }, {
+        // PositionOptions
+        enableHighAccuracy: true
+      });
+    } else {
+      // browser doesn't support geolocation
+      enabled = false;
+    }
+  };
+
+  // stop tracking of current position
+  this.stop = function() {
+    if (watch_id) {
+      navigator.geolocation.clearWatch(watch_id);
+    }
+    enabled = false;
+  };
+
+  this.setPosition = function(pos, accuracy) {
+    if (marker) {
+      marker.setToeLatLng(pos);
+      market.setToeRadius(accuracy);
+    } else {
+      marker = new toe.map.CurrentPositionMarker({
+        position: pos,
+        radius: accuracy
+      });
+    }
+  };
+
+  this.isEnabled = function() { return enabled; };
+};
+
+// PRIVATE METHODS
+// ---------------
 toe.util = {
   encodeJSON: function(str) {
     if (!str) return '';

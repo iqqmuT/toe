@@ -410,7 +410,7 @@ toe.map.AreaBorderMarker = function(options) {
       new google.maps.Point(0,0),   // origin
       new google.maps.Point(7, 7)); // anchor
     options.shape = {
-      coord: [1, 1, 1, 14, 14, 14, 14, 1],
+      coords: [1, 1, 1, 14, 14, 14, 14, 1],
       type: 'poly'
     };
     options.raiseOnDrag = false;
@@ -443,4 +443,38 @@ toe.map.AreaBorderMarker.prototype.getToeLatLng = function() {
 
 toe.map.AreaBorderMarker.prototype.setToeLatLng = function(latLng) {
   this.setPosition(latLng);
+};
+
+/**
+ * CurrentPositionMarker
+ */
+toe.map.CurrentPositionMarker = function(options) {
+  options.map = toe.map.map;
+  options.center = options.position;
+  options.draggable = false;
+  options.clickable = false;
+  options.editable = false;
+  options.fillColor = '#00f';
+  options.fillOpacity = 0.2,
+  options.strokeColor = '#00f';
+  options.strokeOpacity = 0.5;
+  options.strokeWidth = 2;
+
+  this.base = google.maps.Circle;
+  this.base(options);
+};
+
+toe.map.CurrentPositionMarker.prototype = new google.maps.Circle;
+
+toe.map.CurrentPositionMarker.prototype.hide = function() {
+  this.setVisible(false);
+};
+toe.map.CurrentPositionMarker.prototype.show = function() {
+  this.setVisible(true);
+};
+toe.map.CurrentPositionMarker.prototype.setToeLatLng = function(latLng) {
+  this.setPosition(latLng);
+};
+toe.map.CurrentPositionMarker.prototype.setToeRadius = function(radius) {
+  this.setRadius(radius);
 };
