@@ -1703,7 +1703,6 @@ toe.CurrentPositionTracker = new function() {
   var watch_id = null;
 
   var handlePosition = function(position) {
-    console.log(position);
     var pos = new toe.map.LatLng(position.coords.latitude,
                                  position.coords.longitude);
     self.setPosition(pos, position.coords.accuracy);
