@@ -1431,7 +1431,9 @@ toe.Area.prototype.addBorder = function(latLng) {
   //var cmd = new toe.command.AddBoundary(latLng, this);
   //cmd.execute();
   toe.BoundaryManager.add(latLng, this);
-  this._showBorderMarker(latLng);
+  if (this.isActive()) {
+    this._showBorderMarker(latLng);
+  }
 };
 
 // remove this area and all belonging to it
@@ -1639,6 +1641,13 @@ toe.Area.prototype.removeBorderMarker = function(latLng) {
  */
 toe.Area.prototype.isArea = function() {
   return (this.polygon.getToePath().length > 2);
+};
+
+/**
+ * Returns true if this area is active.
+ */
+toe.Area.prototype.isActive = function() {
+  return (toe.AreaManager.active_area == this);
 };
 
 // remove markers
