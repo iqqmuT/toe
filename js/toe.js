@@ -748,10 +748,15 @@ toe.command = {
   redoHistory: []
 };
 
-// appends command to undo history
-toe.command.append = function(cmd) {
-  this.undoHistory.push(cmd);
-  this.redoHistory = [];
+// run given command and if it succeed, add to undo history
+// returns cmd.execute() result
+toe.command.run = function(cmd) {
+  var ret = cmd.execute();
+  if (ret.success) {
+    this.undoHistory.push(cmd);
+    this.redoHistory = [];
+  }
+  return ret;
 };
 
 toe.command.undo = function() {
@@ -771,22 +776,23 @@ toe.command.redo = function() {
 };
 
 // Create area
-toe.command.CreateArea = function(area, latLng) {
-  this.area = area;
+toe.command.CreateArea = function(latLng) {
   this.latLng = latLng;
-  this.execute(true);
-  toe.command.append(this);
+  this.area = new toe.Area(null, '', '', [ this.latLng ]);
 };
 
-toe.command.CreateArea.prototype.execute = function(init) {
+toe.command.CreateArea.prototype.execute = function() {
+  this.area.addBorder(this.latLng);
   toe.AreaManager.add(this.area);
-  //if (!init)
-  //  this.area.addBorder(this.latLng);
   this.area.show();
-  this.area.activate();
+  return {
+    success: true,
+    area: this.area
+  };
 };
 
 toe.command.CreateArea.prototype.undo = function() {
+  this.area.deactivate();
   toe.AreaManager.remove(this.area);
 };
 
@@ -794,12 +800,11 @@ toe.command.CreateArea.prototype.undo = function() {
 toe.command.AddBorder = function(area, latLng) {
   this.area = area;
   this.latLng = latLng;
-  this.execute();
-  toe.command.append(this);
 };
 
 toe.command.AddBorder.prototype.execute = function() {
   this.area.addBorder(this.latLng);
+  return { success: true };
 };
 
 toe.command.AddBorder.prototype.undo = function() {
@@ -810,12 +815,11 @@ toe.command.AddBorder.prototype.undo = function() {
 toe.command.RemoveBorder = function(area, latLng) {
   this.area = area;
   this.latLng = latLng;
-  this.execute();
-  toe.command.append(this);
 };
 
 toe.command.RemoveBorder.prototype.execute = function() {
   toe.BoundaryManager.removeByLatLng(this.latLng, this.area);
+  return { success: true };
 };
 
 toe.command.RemoveBorder.prototype.undo = function() {
@@ -909,7 +913,7 @@ toe.AreaManager = new function() {
       // add new border to active area
       console.log("ADD TO AREA ", self.active_area);
       var latLng = toe.map.getEventLatLng(event);
-      new toe.command.AddBorder(self.active_area, latLng);
+      toe.command.run(new toe.command.AddBorder(self.active_area, latLng));
       //self.active_area.addBorder(latLng);
     } else {
       // create a new area
@@ -917,19 +921,17 @@ toe.AreaManager = new function() {
       //var areaId = self.get_new_id();
       //var latLng = toe.map.getEventLatLng(event);
       var latLng = toe.map.getEventLatLng(event);
-      var area = new toe.Area(self.get_new_id(), '', '', [ latLng ]);
-      new toe.command.CreateArea(area, latLng);
-      //self.add(area);
-      //area.show();
-      //area.activate();
+      var ret = toe.command.run(new toe.command.CreateArea(latLng));
+      if (ret.success) {
+        ret.area.activate();
+      }
     }
-
   };
 
   this.add = function(area) {
-    if (this.find_by_id(area.id)) {
+    if (this.findById(area.id)) {
       console.log("id " + area.id + " is reserved, generating a new id for area");
-      area.id = this.get_new_id();
+      area.id = this.getNewId();
     }
     this.areas.push(area);
     this.changed = true;
@@ -968,7 +970,7 @@ toe.AreaManager = new function() {
   };
 
   // returns area with given id or null
-  this.find_by_id = function(id) {
+  this.findById = function(id) {
     for (var i in this.areas) {
       if (this.areas[i].id == id)
         return this.areas[i];
@@ -976,7 +978,7 @@ toe.AreaManager = new function() {
     return null;
   };
 
-  this.get_new_id = function() {
+  this.getNewId = function() {
     var time = new Date();
     var new_id = "" + time.getTime();
     return "-" + new_id.substring(new_id.length - 8);
@@ -985,7 +987,7 @@ toe.AreaManager = new function() {
   // this function is called when user clicks Save on AreaInfoWindow
   this.saveInfo = function(event) {
     var id = $("#area_id").val();
-    var area = this.find_by_id(id);
+    var area = this.findById(id);
     if (area) {
       var number = $("#area_number").val();
       var name = $("#area_name").val();
@@ -1295,7 +1297,7 @@ toe.Boundary.prototype.hasArea = function(area) {
 // Area
 // ------------------------------------------------------------
 toe.Area = function(id, number, name, path) {
-  this.id = id;
+  this.id = id || toe.AreaManager.getNewId();
   this.number = number;
   this.name = name;
   this.edit_mode = false;
@@ -1369,8 +1371,7 @@ toe.Area.prototype.doubleClicked = function(event) {
   if (toe.control.Mode.selected == toe.control.Mode.AREA) {
     if (toe.AreaManager.active_area) {
       var latLng = toe.map.getEventLatLng(event);
-      new toe.command.AddBorder(toe.AreaManager.active_area, latLng);
-      //toe.AreaManager.active_area.addBorder(latLng);
+      toe.command.run(new toe.command.AddBorder(toe.AreaManager.active_area, latLng));
     }
   }
 };
@@ -1416,15 +1417,21 @@ toe.Area.prototype.deactivate = function() {
   }
 };
 
-// when user clicks the map with shift key,
-// he adds a new boundary for this area
+// adds a new boundary for area
 toe.Area.prototype.addBorder = function(latLng) {
   console.log("add new border: ", this.name, latLng);
+
+  var path = this.polygon.getToePath();
+  for (var i = 0; i < path.length; i++) {
+    if (path[i].equals(latLng)) {
+      // we don't allow to add same latLng again
+      return false;
+    }
+  }
 
   // edit polygon path
   // find the vertex
   var idx = toe.util.getNearestVertex(this.polygon.getToePath(), latLng)
-  //this.polygon.getPath().insertAt(idx, latLng);
   this.polygon.addToPath(idx, latLng);
 
   // see if this is already exists in boundaries array
@@ -1593,7 +1600,7 @@ toe.Area.prototype._showBorderMarker = function(latLng) {
   marker.setDoubleClick(function(event) {
     //if (boundary && shift_is_down) {
     if (boundary) {
-      new toe.command.RemoveBorder(self, boundary.latLng);
+      toe.command.run(new toe.command.RemoveBorder(self, boundary.latLng));
       //marker.remove();
       //if (area.polygon.path.getLength == 0) {
       //console.log("we should destroy the area now!");
