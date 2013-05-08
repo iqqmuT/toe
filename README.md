@@ -49,6 +49,8 @@ http://wiki.openstreetmap.org/wiki/Mapnik
 If you want to print QR codes, install PHP QR Code to export/lib/phpqrcode.
 http://phpqrcode.sourceforge.net/
 
+Give right permission for web server to write into db directory. It will be used for archiving map hashes used in QR codes.
+
 ## License
 
 TOE is published under GPLv3 license [http://www.gnu.org/licenses/gpl-3.0.html].
