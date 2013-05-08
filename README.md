@@ -15,6 +15,7 @@ TOE uses following JavaScript libraries:
  * PHP >= 5.2
  * Magic quotes are disabled
  * SQLite3
+ * GD library for PHP QR Code support
 
 ## Installing OpenStreetMaps data for exporting maps
 
