@@ -267,7 +267,7 @@ class MapnikRenderer:
 
     def _print_qr_code(self, qrcode):
         self.ctx.save()
-        zoom = 0.2
+        zoom = 0.3
         self.ctx.scale(zoom, zoom)
         img = cairo.ImageSurface.create_from_png(qrcode)
         margin = self.style.get_px('qrcode_margin', [ 0, 0 ])
