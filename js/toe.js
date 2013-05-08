@@ -103,13 +103,14 @@ var toe = {
     if (document.cookie.length > 0) {
       var start = document.cookie.indexOf(this.options.cookie_name + '=');
       if (start != -1) {
-        var end = document.cookie.indexOf(';', start);
+        var cookie_txt = document.cookie.substring(start);
+        var end = cookie_txt.indexOf(';');
         if (end != -1) {
           // found view from cookie
-          var cookieTxt = document.cookie.substring(start, end);
-          var bounds = toe.map.getLatLngBoundsByString(cookieTxt)
-          return bounds;
+          cookie_txt = cookie_txt.substring(0, end);
         }
+        var bounds = toe.map.getLatLngBoundsByString(cookie_txt)
+        return bounds;
       }
     }
     return false;
