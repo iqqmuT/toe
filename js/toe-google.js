@@ -473,7 +473,7 @@ toe.map.CurrentPositionMarker.prototype.show = function() {
   this.setVisible(true);
 };
 toe.map.CurrentPositionMarker.prototype.setToeLatLng = function(latLng) {
-  this.setPosition(latLng);
+  this.setCenter(latLng);
 };
 toe.map.CurrentPositionMarker.prototype.setToeRadius = function(radius) {
   this.setRadius(radius);
