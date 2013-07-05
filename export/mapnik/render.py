@@ -159,8 +159,15 @@ class MapnikRenderer:
         # Note: aspect_fix_mode is only available in Mapnik >= 0.6.0
         self.m.zoom_to_box(self.merc_bbox)
 
-        # render the map to cairo surface
-        surface = cairo.PDFSurface(map_uri, self.paper_size[0], self.paper_size[1])
+        # get output format from styles.json, default is pdf
+        output_format = self.style.get('format', 'pdf')
+
+        # we will render the map to cairo surface
+        surface = None
+        if output_format == 'pdf':
+            surface = cairo.PDFSurface(map_uri, self.paper_size[0], self.paper_size[1])
+        elif output_format == 'svg':
+            surface = cairo.SVGSurface(map_uri, self.m.width, self.m.height)
         self.ctx = cairo.Context(surface)
 
         # margins
