@@ -17,6 +17,10 @@ TOE uses following JavaScript libraries:
  * SQLite3
  * GD library for PHP QR Code support
 
+## Installing
+
+Copy config.php.template to config.php and edit it.
+
 ## Installing OpenStreetMaps data for exporting maps
 
 Install Postgresql with PostGIS: `sudo apt-get install postgresql-9.1-postgis`

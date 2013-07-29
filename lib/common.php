@@ -21,7 +21,7 @@
  */
 
 include("lib/i18n.php");
-include("config.php");
+require("config.php");
 
 // global vars
 $localization = new Localization();
