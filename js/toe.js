@@ -1746,7 +1746,7 @@ toe.CurrentPositionTracker = new function() {
   this.setPosition = function(pos, accuracy) {
     if (marker) {
       marker.setToeLatLng(pos);
-      market.setToeRadius(accuracy);
+      marker.setToeRadius(accuracy);
     } else {
       marker = new toe.map.CurrentPositionMarker({
         position: pos,
