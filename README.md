@@ -20,6 +20,7 @@ TOE uses following JavaScript libraries:
 ## Installing
 
 Copy config.php.template to config.php and edit it.
+Do the same in export directory.
 
 ## Installing OpenStreetMaps data for exporting maps
 

@@ -21,7 +21,7 @@
  * Requires at least PHP 5.2.
  */
 
-include("config.php");
+require("config.php");
 include("util.php");
 include("osm.php");
 
