@@ -1336,7 +1336,7 @@ toe.Area = function(id, number, name, path) {
     strokeColor: "#FF0000",
     strokeOpacity: 0.8,
     strokeWeight: 2,
-    fillColor: "#000000",
+    fillColor: "#666666",
     fillOpacity: 0.1,
     clickable: false
   };
