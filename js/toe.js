@@ -96,6 +96,7 @@ var toe = {
       toe.control.Mode.element.show();
       toe.control.Tools.element.show();
     }
+    toe.AreaManager.setReadonly(readonly);
   },
 
   // loads view from cookie
@@ -134,8 +135,8 @@ var toe = {
       id:     id
     }).success(function(data) {
       console.log('archive opened', data);
-      toe.setReadonly(true);
       toe.importData({ areas: data });
+      toe.setReadonly(true);
     });
   }
 
@@ -896,6 +897,12 @@ toe.AreaManager = new function() {
     toe.handler.mapDoubleClicked = function() { };
   };
 
+  this.setReadonly = function(readonly) {
+    for (var i = 0; i < this.areas.length; i++) {
+      this.areas[i].setReadonly(readonly);
+    }
+  };
+
   this.mapClicked = function(event) {
     console.log("AREAS:MAPCLICKED", event);
 
@@ -1314,14 +1321,24 @@ toe.Area = function(id, number, name, path) {
     strokeOpacity: 0.8,
     strokeWeight: 2,
     fillColor: "#FF0000",
-    fillOpacity: 0.35
+    fillOpacity: 0.35,
+    clickable: true
   };
   this.deactivated_options = {
     strokeColor: "#000000",
     strokeOpacity: 0.8,
     strokeWeight: 1,
     fillColor: "#000000",
-    fillOpacity: 0.1
+    fillOpacity: 0.1,
+    clickable: true
+  };
+  this.readonly_options = {
+    strokeColor: "#FF0000",
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: "#000000",
+    fillOpacity: 0.1,
+    clickable: false
   };
 
   this.polygon = new toe.map.Polygon({
@@ -1415,6 +1432,14 @@ toe.Area.prototype.deactivate = function() {
   if (!this.isArea()) {
     // this area is incomplete, remove as unneeded
     toe.AreaManager.remove(this);
+  }
+};
+
+toe.Area.prototype.setReadonly = function(readonly) {
+  if (readonly) {
+    this.polygon.setColor(this.readonly_options);
+  } else {
+    this.deactivate();
   }
 };
 
