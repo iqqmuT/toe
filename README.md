@@ -1,6 +1,6 @@
 # TOE
 
-TOE is an online map area editor.
+TOE is a territory online editor.
 
 You can configure TOE to use one of these JavaScript map libraries:
  * Google Maps JavaScript API V3
