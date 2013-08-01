@@ -1,6 +1,10 @@
 #!/usr/bin/env python
+# coding=utf8
 
-# run this from mapnik directory!
+# run this in mapnik stylesheet directory!
+# Example:
+# cd ~/mapnik-stylesheets
+# echo '{"areas":[],"pois":[]}' | ../www/toe/export/mapnik/render.py -b "((61.477925877956785, 21.768811679687474), (61.488948601502614, 21.823743320312474))" -s 144x93
 
 import sys, os
 import mapnik2
@@ -89,7 +93,7 @@ class StyleParser:
 class MapnikRenderer:
 
     STYLES_FILE="styles.json"
-    COPYRIGHT_TEXT="Map data (c) OpenStreetMap contributors, CC-BY-SA"
+    COPYRIGHT_TEXT="© OpenStreetMap contributors, CC-BY-SA"
 
     def __init__(self, areas):
         self.areas = areas
