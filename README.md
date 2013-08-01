@@ -1,6 +1,7 @@
 # TOE
 
-TOE is a territory online editor.
+TOE - TOE Online Editor.
+With TOE you can create and edit map areas or territories using browser.
 
 You can configure TOE to use one of these JavaScript map libraries:
  * Google Maps JavaScript API V3

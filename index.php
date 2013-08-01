@@ -27,7 +27,8 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
 ?>
 <html lang="<? print $lang; ?>">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="description" content="Create and edit map areas online with your browser." />
     <link rel="icon" type="image/png" href="images/toe-icon.png" />
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
