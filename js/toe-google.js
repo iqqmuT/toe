@@ -23,14 +23,14 @@
 toe.map = {
 
   init: function() {
-    var center = new google.maps.LatLng(0, 0);
+    var center = new google.maps.LatLng(53, 15); // europe
     var lastView = toe._loadBounds();
     if (lastView !== false) {
       center = lastView.getCenter();
     }
 
     var mapOptions = {
-      zoom: 1,
+      zoom: 4,
       center: center,
       mapTypeId: 'OSM',
       mapTypeControlOptions: {

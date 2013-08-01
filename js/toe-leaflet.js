@@ -26,8 +26,8 @@ toe.map = {
     var mapOptions = {
       doubleClickZoom: false,
       touchZoom: true,
-      center: new L.LatLng(0, 0),
-      zoom: 13
+      center: new L.LatLng(53, 15), // europe
+      zoom: 4
     };
     this.map = new L.Map('map_canvas', mapOptions);
     L.tileLayer('http://{s}.tile.cloudmade.com/f32e8bf95a994abf9d647adc983a33a5/997/256/{z}/{x}/{y}.png', {
