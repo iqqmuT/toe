@@ -1117,6 +1117,7 @@ toe.VertexManager = new function() {
     }
     // link given area to vertex
     vertex.linkTo(area);
+    return vertex;
   };
 
   // if area given, remove only given area from vertex
@@ -1180,6 +1181,7 @@ toe.VertexManager = new function() {
 toe.Vertex = function(latLng) {
   this.latLng = latLng;
   this.areas = []; // array of areas into which this belongs
+  this.marker = null;
 }
 
 // move vertex to given latLng
@@ -1297,6 +1299,54 @@ toe.Vertex.prototype.hasArea = function(area) {
   return false;
 };
 
+/**
+ * Shows AreaVertexMarker.
+ */
+toe.Vertex.prototype.showMarker = function() {
+  if (this.marker) {
+    // this vertex has already marker
+    return false;
+  }
+
+  this.marker = new toe.map.AreaVertexMarker({
+    position: this.latLng,
+    title: tr('Drag to edit, dbl click to remove')
+  });
+
+  var self = this;
+  this.marker.setDragEnd(function(event) {
+    var latLng = this.getToeLatLng();
+    self.move(latLng);
+
+    if (toe.options.snap_vertices > 0) {
+      // snap to another vertex within some range
+      var vertex_near = self.findNearVertex(toe.options.snap_vertices);
+      if (vertex_near) {
+        self.move(vertex_near.latLng);
+        self.marker.setToeLatLng(vertex_near.latLng);
+        self.merge(vertex_near);
+      }
+    }
+  });
+
+  // marker delete functionality
+  this.marker.setDoubleClick(function(event) {
+    //if (vertex && shift_is_down) {
+    toe.command.run(new toe.command.RemoveVertex(toe.AreaManager.active_area, self.latLng));
+  });
+};
+
+/**
+ * Removes AreaVertexMarker.
+ */
+toe.Vertex.prototype.removeMarker = function() {
+  if (this.marker) {
+    this.marker.remove();
+    delete this.marker;
+    this.marker = null;
+  }
+};
+
 // ------------------------------------------------------------
 // Area
 // ------------------------------------------------------------
@@ -1306,7 +1356,6 @@ toe.Area = function(id, number, name, path) {
   this.name = name;
   this.edit_mode = false;
   this.changed = false;
-  this.vertex_markers = [];
   this.changed = false;
   this.click_timeout = null;
 
@@ -1410,10 +1459,23 @@ toe.Area.prototype.refreshMarkers = function() {
   this._showMarkers();
 };
 
+/**
+ * Show markers.
+ */
 toe.Area.prototype._showMarkers = function() {
-  var vertices = this.polygon.getToePath();
+  var vertices = this.getVertices();
   for (var i = 0; i < vertices.length; i++) {
-    this._showVertexMarker(vertices[i]);
+    vertices[i].showMarker();
+  }
+};
+
+/**
+ * Remove markers
+ */
+toe.Area.prototype._removeMarkers = function() {
+  var vertices = this.getVertices();
+  for (var i = 0; i < vertices.length; i++) {
+    vertices[i].removeMarker();
   }
 };
 
@@ -1459,10 +1521,25 @@ toe.Area.prototype.addVertex = function(latLng) {
   // see if this is already exists in vertices array
   //var cmd = new toe.command.Addvertex(latLng, this);
   //cmd.execute();
-  toe.VertexManager.add(latLng, this);
+  var vertex = toe.VertexManager.add(latLng, this);
   if (this.isActive()) {
-    this._showVertexMarker(latLng);
+    vertex.showMarker();
   }
+};
+
+/**
+ * Returns array of Vertex objects which belong to this area.
+ */
+toe.Area.prototype.getVertices = function() {
+  var vertices = [];
+  var path = this.polygon.getToePath();
+  for (var i = 0; i < path.length; i++) {
+    var verts = toe.VertexManager.find(path[i], this);
+    for (var j = 0; j < verts.length; j++) {
+      vertices.push(verts[j]);
+    }
+  }
+  return vertices;
 };
 
 // remove this area and all belonging to it
@@ -1553,95 +1630,6 @@ toe.Area.prototype.getPOIs = function() {
   return area_pois;
 };
 
-toe.Area.prototype._showVertexMarker = function(latLng) {
-  console.log("_showVertexMarker ", latLng);
-
-  var self = this;
-  // marker drag functionality
-  var vertices = toe.VertexManager.find(latLng);
-  if (vertices.length == 0) console.log("FATAL ERROR: no vertex found for this marker!");
-  var vertex = vertices[0];
-
-  var marker = new toe.map.AreaVertexMarker({
-    position: latLng,
-    title: tr('Drag to edit, dbl click to remove')
-  });
-  this.vertex_markers.push(marker);
-
-  marker.setDragEnd(function(event) {
-    if (vertex) {
-      var latLng = this.getToeLatLng();
-      vertex.move(latLng);
-
-      if (toe.options.snap_vertices > 0) {
-        // snap to another vertex within some range
-        var vertex_near = vertex.findNearVertex(toe.options.snap_vertices);
-        if (vertex_near) {
-          vertex_near.merge(vertex);
-          marker.setToeLatLng(vertex_near.latLng);
-          vertex = vertex_near;
-          //boundary.merge(boundary_near);
-          //self.removeDuplicateMarkers();
-        }
-      }
-
-      // try to merge this boundary if it snapped with other boundary
-      /*
-      if (toe.VertexManager.mergeVertex(vertex) === true) {
-        // dragging ended so that we merged it with another
-        // let's see if we have now two markers in the same place, if so, remove other
-        self.removeDuplicateMarkers();
-      }*/
-    }
-  });
-
-  // marker delete functionality
-  marker.setDoubleClick(function(event) {
-    //if (vertex && shift_is_down) {
-    if (vertex) {
-      toe.command.run(new toe.command.RemoveVertex(self, vertex.latLng));
-      //marker.remove();
-      //if (area.polygon.path.getLength == 0) {
-      //console.log("we should destroy the area now!");
-      //}
-      // normally shift + click on link opens a new window in firefox
-      // we don't want that
-      //event.preventDefault(); 
-    }
-  });
-
-};
-
-// remove duplicate markers from this area
-toe.Area.prototype.removeDuplicateMarkers = function() {
-  for (var i = 0; i < this.vertex_markers.length; i++) {
-    for (var j = i + 1; j < this.vertex_markers.length; j++) {
-      var pos1 = this.vertex_markers[i].getToeLatLng();
-      var pos2 = this.vertex_markers[j].getToeLatLng();
-      if (pos1.equals(pos2)) {
-        console.log("removed duplicate marker");
-        this.vertex_markers[j].remove();
-        this.vertex_markers.splice(j, 1);
-        return true; // duplicate removed
-      }
-    }
-  }
-  return false; // no dups
-};
-
-/**
- * Removes vertex marker by given latLng.
- */
-toe.Area.prototype.removeVertexMarker = function(latLng) {
-  for (var i = 0; i < this.vertex_markers.length; i++) {
-    var pos = this.vertex_markers[i].getToeLatLng();
-    if (latLng.equals(pos)) {
-      this.vertex_markers[i].remove();
-      this.vertex_markers.splice(i, 1);
-    }
-  }
-};
-
 /**
  * Returns true if area has at least 3 points.
  */
@@ -1654,17 +1642,6 @@ toe.Area.prototype.isArea = function() {
  */
 toe.Area.prototype.isActive = function() {
   return (toe.AreaManager.active_area == this);
-};
-
-// remove markers
-toe.Area.prototype._removeMarkers = function() {
-  if (this.vertex_markers) {
-    for (var i in this.vertex_markers) {
-      this.vertex_markers[i].remove();
-    }
-    // clear the array (and remove the markers from memory)
-    this.vertex_markers.length = 0;
-  }
 };
 
 // ------------------------------------------------------------
