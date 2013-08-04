@@ -754,7 +754,11 @@ toe.command = {
 // returns cmd.execute() result
 toe.command.run = function(cmd) {
   var ret = cmd.execute();
-  if (ret.success) {
+  if (ret === undefined) {
+    // error, command should return object containing success field
+    console.log('ERROR: command function did not return correct value');
+  }
+  if (ret && ret.success) {
     this.undoHistory.push(cmd);
     this.redoHistory = [];
   }
@@ -826,6 +830,49 @@ toe.command.RemoveVertex.prototype.execute = function() {
 
 toe.command.RemoveVertex.prototype.undo = function() {
   this.area.addVertex(this.latLng);
+};
+
+// Move vertex
+toe.command.MoveVertex = function(oldLatLng, newLatLng) {
+  this.oldLatLng = oldLatLng;
+  this.newLatLng = newLatLng;
+};
+
+toe.command.MoveVertex.prototype.execute = function() {
+  var vertex = toe.VertexManager.findOne(this.oldLatLng);
+  if (vertex) {
+    vertex.move(this.newLatLng);
+    return { success: true };
+  }
+  return { success: false };
+};
+
+toe.command.MoveVertex.prototype.undo = function() {
+  var vertex = toe.VertexManager.findOne(this.newLatLng);
+  if (vertex) {
+    vertex.move(this.oldLatLng);
+  }
+};
+
+// Merge vertices
+toe.command.MergeVertices = function(area, target_boundary, boundary) {
+  this.area = area;
+  this.oldLatLng = boundary.latLng
+  this.newLatLng = target_boundary.latLng;
+};
+
+toe.command.MergeVertices.prototype.execute = function() {
+  var oldVertex = toe.VertexManager.findOne(this.oldLatLng);
+  var newVertex = toe.VertexManager.findOne(this.newLatLng);
+  if (oldVertex && newVertex) {
+    //newVertex.merge(oldVertex);
+    oldVertex.merge(newVertex);
+    return { success: true };
+  }
+  return { success: false };
+};
+
+toe.command.MergeVertices.prototype.undo = function() {
 };
 
 // ------------------------------------------------------------
@@ -1102,6 +1149,17 @@ toe.VertexManager = new function() {
     return result;
   };
 
+  /**
+   * Returns one Vertex by given latLng or null if not found.
+   */
+  this.findOne = function(latLng) {
+    var verts = this.find(latLng);
+    if (verts.length) {
+      return verts[0];
+    }
+    return false;
+  };
+
   this.add = function(latLng, area) {
     // see if this is already exists in vertices array
     console.log("VertexManager.add(", latLng, area, ")");
@@ -1225,8 +1283,6 @@ toe.Vertex.prototype.unlink = function(area) {
     if (!area || (area && this.areas[i] == area)) {
       if (this.areas[i].polygon.removeFromPath(this.latLng)) {
         this.areas[i].changed = true;
-        // remove marker if visible
-        this.areas[i].removeVertexMarker(this.latLng);
       }
       /*
       var path = this.areas[i].polygon.getPath();
@@ -1246,6 +1302,8 @@ toe.Vertex.prototype.unlink = function(area) {
   // replace areas, now given area should be missing
   // (or all areas)
   this.areas = new_areas;
+  // remove marker if visible
+  this.removeMarker();
 };
 
 // returns true if this vertex no longer is used
@@ -1253,10 +1311,10 @@ toe.Vertex.prototype.empty = function() {
   return (this.areas.length == 0);
 };
 
-toe.Vertex.prototype.findNearVertex = function(range) {
+toe.Vertex.prototype.findNearVertex = function(latLng, range) {
   //var point = overlay.getProjection().fromLatLngToContainerPixel(this.latLng);
-  console.log("find near", this.latLng);
-  var point = this.latLng.toPoint();
+  console.log("find near", latLng);
+  var point = latLng.toPoint();
   for (var i = 0; i < toe.VertexManager.vertices.length; i++) {
     var vertex = toe.VertexManager.vertices[i];
     if (vertex == this) continue; // skip over this
@@ -1290,6 +1348,7 @@ toe.Vertex.prototype.merge = function(vertex) {
   }
   vertex.areas = [];
   toe.VertexManager.remove(vertex);
+  this.showMarker();
 };
 
 /**
@@ -1320,15 +1379,17 @@ toe.Vertex.prototype.showMarker = function() {
   var self = this;
   this.marker.setDragEnd(function(event) {
     var latLng = this.getToeLatLng();
-    self.move(latLng);
-
+    var merged = false;
     if (toe.options.snap_vertices > 0) {
       // snap to another vertex within some range
-      var vertex_near = self.findNearVertex(toe.options.snap_vertices);
+      var vertex_near = self.findNearVertex(latLng, toe.options.snap_vertices);
       if (vertex_near) {
-        self.move(vertex_near.latLng);
-        self.merge(vertex_near);
+        toe.command.run(new toe.command.MergeVertices(toe.AreaManager.active_area, self, vertex_near));
+        merged = true;
       }
+    }
+    if (!merged) {
+      toe.command.run(new toe.command.MoveVertex(self.latLng, latLng));
     }
   });
 
