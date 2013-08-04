@@ -400,9 +400,9 @@ toe.map.Rectangle.prototype.toString = function() {
 };
 
 /**
- * AreaBorderMarker
+ * AreaVertexMarker
  */
-toe.map.AreaBorderMarker = function(options) {
+toe.map.AreaVertexMarker = function(options) {
     options.map = toe.map.map;
     options.draggable = true;
     options.icon = new google.maps.MarkerImage('images/red_dot.png',
@@ -420,28 +420,28 @@ toe.map.AreaBorderMarker = function(options) {
     this.base(options);
 };
 
-toe.map.AreaBorderMarker.prototype = new google.maps.Marker;
+toe.map.AreaVertexMarker.prototype = new google.maps.Marker;
 
-toe.map.AreaBorderMarker.prototype.remove = function() {
+toe.map.AreaVertexMarker.prototype.remove = function() {
   this.setMap(null);
 };
-toe.map.AreaBorderMarker.prototype.setDrag = function(func) {
+toe.map.AreaVertexMarker.prototype.setDrag = function(func) {
   google.maps.event.addListener(this, 'drag', func);
 };
 
-toe.map.AreaBorderMarker.prototype.setDragEnd = function(func) {
+toe.map.AreaVertexMarker.prototype.setDragEnd = function(func) {
   google.maps.event.addListener(this, 'dragend', func);
 };
 
-toe.map.AreaBorderMarker.prototype.setDoubleClick = function(func) {
+toe.map.AreaVertexMarker.prototype.setDoubleClick = function(func) {
   google.maps.event.addListener(this, 'dblclick', func);
 };
 
-toe.map.AreaBorderMarker.prototype.getToeLatLng = function() {
+toe.map.AreaVertexMarker.prototype.getToeLatLng = function() {
   return toe.map._toLatLng(this.getPosition());
 };
 
-toe.map.AreaBorderMarker.prototype.setToeLatLng = function(latLng) {
+toe.map.AreaVertexMarker.prototype.setToeLatLng = function(latLng) {
   this.setPosition(latLng);
 };
 

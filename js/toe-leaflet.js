@@ -354,9 +354,9 @@ toe.map.Rectangle.prototype.toString = function() {
 
 
 /**
- * AreaBorderMarker
+ * AreaVertexMarker
  */
-toe.map.AreaBorderMarker = function(options) {
+toe.map.AreaVertexMarker = function(options) {
   var icon = new L.Icon({
     iconUrl: 'images/red_dot.png',
     shadowUrl: null,
@@ -373,29 +373,29 @@ toe.map.AreaBorderMarker = function(options) {
   toe.map.map.addLayer(this);
 };
 
-toe.map.AreaBorderMarker.prototype.__proto__ = L.Marker.prototype;
+toe.map.AreaVertexMarker.prototype.__proto__ = L.Marker.prototype;
 
-toe.map.AreaBorderMarker.prototype.remove = function() {
+toe.map.AreaVertexMarker.prototype.remove = function() {
   toe.map.map.removeLayer(this);
 };
 
-toe.map.AreaBorderMarker.prototype.setDrag = function(func) {
+toe.map.AreaVertexMarker.prototype.setDrag = function(func) {
   this.on('drag', func);
 };
 
-toe.map.AreaBorderMarker.prototype.setDragEnd = function(func) {
+toe.map.AreaVertexMarker.prototype.setDragEnd = function(func) {
   this.on('dragend', func);
 };
 
-toe.map.AreaBorderMarker.prototype.setDoubleClick = function(func) {
+toe.map.AreaVertexMarker.prototype.setDoubleClick = function(func) {
   this.on('dblclick', func);
 };
 
-toe.map.AreaBorderMarker.prototype.getToeLatLng = function() {
+toe.map.AreaVertexMarker.prototype.getToeLatLng = function() {
   return toe.map._toLatLng(this.getLatLng());
 };
 
-toe.map.AreaBorderMarker.prototype.setToeLatLng = function(latLng) {
+toe.map.AreaVertexMarker.prototype.setToeLatLng = function(latLng) {
   this.setLatLng(latLng);
 };
 

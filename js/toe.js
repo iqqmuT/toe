@@ -39,7 +39,7 @@ var toe = {
 
   options: {
     single_click_timeout: 400, // timeout in ms
-    snap_boundaries: 5,        // snap to other boundary within 5 px range
+    snap_vertices: 5,          // snap to other vertex within 5 px range
     cookie_name: 'toe',        // cookie name
     cookie_expire_days: 30,    // cookie expire in days
     archive: null,             // open archive in read only mode
@@ -784,7 +784,7 @@ toe.command.CreateArea = function(latLng) {
 };
 
 toe.command.CreateArea.prototype.execute = function() {
-  this.area.addBorder(this.latLng);
+  this.area.addVertex(this.latLng);
   toe.AreaManager.add(this.area);
   this.area.show();
   return {
@@ -798,34 +798,34 @@ toe.command.CreateArea.prototype.undo = function() {
   toe.AreaManager.remove(this.area);
 };
 
-// Add new border
-toe.command.AddBorder = function(area, latLng) {
+// Add new vertex
+toe.command.AddVertex = function(area, latLng) {
   this.area = area;
   this.latLng = latLng;
 };
 
-toe.command.AddBorder.prototype.execute = function() {
-  this.area.addBorder(this.latLng);
+toe.command.AddVertex.prototype.execute = function() {
+  this.area.addVertex(this.latLng);
   return { success: true };
 };
 
-toe.command.AddBorder.prototype.undo = function() {
-  toe.BoundaryManager.removeByLatLng(this.latLng, this.area);
+toe.command.AddVertex.prototype.undo = function() {
+  toe.VertexManager.removeByLatLng(this.latLng, this.area);
 };
 
-// Remove border
-toe.command.RemoveBorder = function(area, latLng) {
+// Remove vertex
+toe.command.RemoveVertex = function(area, latLng) {
   this.area = area;
   this.latLng = latLng;
 };
 
-toe.command.RemoveBorder.prototype.execute = function() {
-  toe.BoundaryManager.removeByLatLng(this.latLng, this.area);
+toe.command.RemoveVertex.prototype.execute = function() {
+  toe.VertexManager.removeByLatLng(this.latLng, this.area);
   return { success: true };
 };
 
-toe.command.RemoveBorder.prototype.undo = function() {
-  this.area.addBorder(this.latLng);
+toe.command.RemoveVertex.prototype.undo = function() {
+  this.area.addVertex(this.latLng);
 };
 
 // ------------------------------------------------------------
@@ -918,16 +918,13 @@ toe.AreaManager = new function() {
     console.log("AREAS:MAP DBL CLICKED", event);
     clearTimeout(click_timeout);
     if (self.active_area) {
-      // add new border to active area
+      // add new vertex to active area
       console.log("ADD TO AREA ", self.active_area);
       var latLng = toe.map.getEventLatLng(event);
-      toe.command.run(new toe.command.AddBorder(self.active_area, latLng));
-      //self.active_area.addBorder(latLng);
+      toe.command.run(new toe.command.AddVertex(self.active_area, latLng));
     } else {
       // create a new area
       console.log("CREATE NEW AREA!", toe.map.getEventLatLng(event));
-      //var areaId = self.get_new_id();
-      //var latLng = toe.map.getEventLatLng(event);
       var latLng = toe.map.getEventLatLng(event);
       var ret = toe.command.run(new toe.command.CreateArea(latLng));
       if (ret.success) {
@@ -1089,107 +1086,106 @@ toe.AreaManager = new function() {
 };
 
 // ------------------------------------------------------------
-// BoundaryManager
+// VertexManager
 // ------------------------------------------------------------
-toe.BoundaryManager = new function() {
+toe.VertexManager = new function() {
   var self = this;
-  this.boundaries_arr = [];
+  this.vertices = [];
 
-  // returns array of boundaries by given latLng
+  // returns array of vertices by given latLng
   this.find = function(latLng) {
     var result = [];
-    for (var i = 0; i < this.boundaries_arr.length; i++) {
-      if (this.boundaries_arr[i].latLng.equals(latLng))
-        result.push(this.boundaries_arr[i]);
+    for (var i = 0; i < this.vertices.length; i++) {
+      if (this.vertices[i].latLng.equals(latLng))
+        result.push(this.vertices[i]);
     }
     return result;
   };
 
   this.add = function(latLng, area) {
-    // see if this is already exists in boundaries array
-    console.log("BoundaryManager.add(", latLng, area, ")");
-    var boundaries = this.find(latLng);
-    if (!boundaries.length) {
-      // create a new boundary
-      var boundary = new toe.Boundary(latLng);
-      this.boundaries_arr.push(boundary);
+    // see if this is already exists in vertices array
+    console.log("VertexManager.add(", latLng, area, ")");
+    var vertices_arr = this.find(latLng);
+    var vertex;
+    if (!vertices_arr.length) {
+      // create a new vertex
+      vertex = new toe.Vertex(latLng);
+      this.vertices.push(vertex);
     }
     else {
-      boundary = boundaries[0];
+      vertex = vertices_arr[0];
     }
-    // link given area to boundary
-    boundary.linkTo(area);
+    // link given area to vertex
+    vertex.linkTo(area);
   };
 
-  // if area given, remove only given area from boundary
-  // else remove whole boundary (remove boundaries that don't belong
+  // if area given, remove only given area from vertex
+  // else remove whole vertex (remove vertices that don't belong
   // to any area anyway)
   this.removeByLatLng = function(latLng, area) {
-    console.log("BoundaryManager.remove(", latLng, area, ")");
-    var boundaries = this.find(latLng);
-    if (boundaries.length) {
-      for (var i = 0; i < boundaries.length; i++) {
-        this.remove(boundaries[i], area);
-      }
+    console.log("VertexManager.remove(", latLng, area, ")");
+    var vertices_arr = this.find(latLng);
+    for (var i = 0; i < vertices_arr.length; i++) {
+      this.remove(vertices_arr[i], area);
     }
   };
   /**
-   * Remove given boundary.
-   * If area given, remove only given area from boundary.
-   * When boundary does not belong to any area anymore,
+   * Remove given vertex.
+   * If area given, remove only given area from vertex.
+   * When vertex does not belong to any area anymore,
    * it can be removed.
    */
-  this.remove = function(boundary, area) {
-    console.log("BoundaryManager.removeBoundary(", boundary, area, ")");
-    boundary.unlink(area);
-    if (boundary.empty()) {
-      console.log("boundary is EMPTY!");
-      // we no longer need this boundary, last link to area was gone
-      for (var i = 0; i < this.boundaries_arr.length; i++) {
-        if (this.boundaries_arr[i] == boundary) {
-          this.boundaries_arr.splice(i, 1); // remove this from array
-          delete boundary;
+  this.remove = function(vertex, area) {
+    console.log("VertexManager.remove(", vertex, area, ")");
+    vertex.unlink(area);
+    if (vertex.empty()) {
+      console.log("vertex is EMPTY!");
+      // we no longer need this vertex, last link to area was gone
+      for (var i = 0; i < this.vertices.length; i++) {
+        if (this.vertices[i] == vertex) {
+          this.vertices.splice(i, 1); // remove this from array
+          delete vertex;
           break;
         }
       }
     }
   };
 
-  // returns true if merged two boundaries having same position
+  // returns true if merged two vertices having same position
   // or false if no merging happened
-  this.mergeBoundary = function(boundary) {
-    for (var i = 0; i < this.boundaries_arr.length; i++) {
-      var other_boundary = this.boundaries_arr[i];
-      if (boundary == other_boundary) continue;
-      if (boundary.latLng.equals(other_boundary.latLng)) {
-        for (var j = 0; j < other_boundary.areas.length; j++) {
-          // copy areas from other boundary
-          boundary.areas.push(other_boundary.areas[j]);
+  this.mergeVertex = function(vertex) {
+    for (var i = 0; i < this.vertices.length; i++) {
+      var other_vertex = this.vertices[i];
+      if (vertex == other_vertex) continue;
+      if (vertex.latLng.equals(other_vertex.latLng)) {
+        for (var j = 0; j < other_vertex.areas.length; j++) {
+          // copy areas from other vertex
+          vertex.areas.push(other_vertex.areas[j]);
         }
-        //  remove boundary
-        //this.remove(other_boundary);
-        this.boundaries_arr.splice(i, 1);
-        delete other_boundary;
+        //  remove vertex
+        //this.remove(other_vertex);
+        this.vertices.splice(i, 1);
+        delete other_vertex;
         return true; // merged 
       }
     }
     return false; // not merged
   };
-}; // BoundaryManager
+}; // VertexManager
 
 
 // ------------------------------------------------------------
-// Boundary
+// Vertex
 // ------------------------------------------------------------
-toe.Boundary = function(latLng) {
+toe.Vertex = function(latLng) {
   this.latLng = latLng;
   this.areas = []; // array of areas into which this belongs
 }
 
-// move boundary to given latLng
-// if area is not given, move this boundary for all areas it
+// move vertex to given latLng
+// if area is not given, move this vertex for all areas it
 // is assigned to
-toe.Boundary.prototype.move = function(latLng, area) {
+toe.Vertex.prototype.move = function(latLng, area) {
   for (var i in this.areas) {
     if (!area || (area && this.areas[i] == area)) {
       if (this.areas[i].polygon.changePath(this.latLng, latLng)) {
@@ -1202,29 +1198,29 @@ toe.Boundary.prototype.move = function(latLng, area) {
 
 
 /**
- * Links boundary to given area.
- * If area was new for this boundary, returns true.
+ * Links vertex to given area.
+ * If area was new for this vertex, returns true.
  */
-toe.Boundary.prototype.linkTo = function(area) {
+toe.Vertex.prototype.linkTo = function(area) {
   if (!this.hasArea(area)) {
-    // given area was new for this boundary
+    // given area was new for this vertex
     this.areas.push(area);
     return true;
   }
   return false;
 };
 
-// if area is not given, remove this boundary from all areas
+// if area is not given, remove this vertex from all areas
 // it is assigned to
-toe.Boundary.prototype.unlink = function(area) {
-  console.log("boundary.remove(", area, ")");
+toe.Vertex.prototype.unlink = function(area) {
+  console.log("vertex.remove(", area, ")");
   var new_areas = [];
   for (var i = 0; i < this.areas.length; i++) {
     if (!area || (area && this.areas[i] == area)) {
       if (this.areas[i].polygon.removeFromPath(this.latLng)) {
         this.areas[i].changed = true;
         // remove marker if visible
-        this.areas[i].removeBorderMarker(this.latLng);
+        this.areas[i].removeVertexMarker(this.latLng);
       }
       /*
       var path = this.areas[i].polygon.getPath();
@@ -1246,54 +1242,54 @@ toe.Boundary.prototype.unlink = function(area) {
   this.areas = new_areas;
 };
 
-// returns true if this boundary no longer is used
-toe.Boundary.prototype.empty = function() {
+// returns true if this vertex no longer is used
+toe.Vertex.prototype.empty = function() {
   return (this.areas.length == 0);
 };
 
-toe.Boundary.prototype.findNearBoundary = function(range) {
+toe.Vertex.prototype.findNearVertex = function(range) {
   //var point = overlay.getProjection().fromLatLngToContainerPixel(this.latLng);
   console.log("find near", this.latLng);
   var point = this.latLng.toPoint();
-  for (var i = 0; i < toe.BoundaryManager.boundaries_arr.length; i++) {
-    var boundary = toe.BoundaryManager.boundaries_arr[i];
-    if (boundary == this) continue; // skip over this
-    //var boundary_point = overlay.getProjection().fromLatLngToContainerPixel(boundary.latLng);
-    var boundary_point = boundary.latLng.toPoint();
-    if (toe.util.pointDistance(point, boundary_point) <= range) {
-      return boundary;
+  for (var i = 0; i < toe.VertexManager.vertices.length; i++) {
+    var vertex = toe.VertexManager.vertices[i];
+    if (vertex == this) continue; // skip over this
+    //var vertex_point = overlay.getProjection().fromLatLngToContainerPixel(vertex.latLng);
+    var vertex_point = vertex.latLng.toPoint();
+    if (toe.util.pointDistance(point, vertex_point) <= range) {
+      return vertex;
     }
   }
   return null;
 };
 
 /**
- * Merges given boundary into this boundary.
- * Given boundary should have same latLng.
- * Removes given boundary.
+ * Merges given vertex into this vertex.
+ * Given vertex should have same latLng.
+ * Removes given vertex.
  */
-toe.Boundary.prototype.merge = function(boundary) {
-  console.log('Boundary.merge()', this.areas);
-  boundary.move(this.latLng);
+toe.Vertex.prototype.merge = function(vertex) {
+  console.log('Vertex.merge()', this.areas);
+  vertex.move(this.latLng);
   var unlinkAreas = [];
   // add areas
-  for (var i = 0; i < boundary.areas.length; i++) {
-    var added = this.linkTo(boundary.areas[i]);
+  for (var i = 0; i < vertex.areas.length; i++) {
+    var added = this.linkTo(vertex.areas[i]);
     if (!added) {
-      unlinkAreas.push(boundary.areas[i]);
+      unlinkAreas.push(vertex.areas[i]);
     }
   }
   for (var i = 0; i < unlinkAreas.length; i++) {
-    boundary.unlink(unlinkAreas[i]);
+    vertex.unlink(unlinkAreas[i]);
   }
-  boundary.areas = [];
-  toe.BoundaryManager.remove(boundary);
+  vertex.areas = [];
+  toe.VertexManager.remove(vertex);
 };
 
 /**
- * Returns true if boundary has given area.
+ * Returns true if vertex has given area.
  */
-toe.Boundary.prototype.hasArea = function(area) {
+toe.Vertex.prototype.hasArea = function(area) {
   for (var i = 0; i < this.areas.length; i++) {
     if (this.areas[i] == area)
       return true;
@@ -1310,7 +1306,7 @@ toe.Area = function(id, number, name, path) {
   this.name = name;
   this.edit_mode = false;
   this.changed = false;
-  this.border_markers = [];
+  this.vertex_markers = [];
   this.changed = false;
   this.click_timeout = null;
 
@@ -1352,10 +1348,10 @@ toe.Area = function(id, number, name, path) {
   });
   this.polygon.setColor(this.deactivated_options);
 
-  // use boundaries array
+  // use vertices array
   for (var i = 0; i < path.length; i++) {
     var latLng = path[i];
-    toe.BoundaryManager.add(latLng, area);
+    toe.VertexManager.add(latLng, area);
   }
 };
 
@@ -1389,7 +1385,7 @@ toe.Area.prototype.doubleClicked = function(event) {
   if (toe.control.Mode.selected == toe.control.Mode.AREA) {
     if (toe.AreaManager.active_area) {
       var latLng = toe.map.getEventLatLng(event);
-      toe.command.run(new toe.command.AddBorder(toe.AreaManager.active_area, latLng));
+      toe.command.run(new toe.command.AddVertex(toe.AreaManager.active_area, latLng));
     }
   }
 };
@@ -1415,9 +1411,9 @@ toe.Area.prototype.refreshMarkers = function() {
 };
 
 toe.Area.prototype._showMarkers = function() {
-  var path = this.polygon.getToePath();
-  for (var i = 0; i < path.length; i++) {
-    this._showBorderMarker(path[i]);
+  var vertices = this.polygon.getToePath();
+  for (var i = 0; i < vertices.length; i++) {
+    this._showVertexMarker(vertices[i]);
   }
 };
 
@@ -1443,9 +1439,9 @@ toe.Area.prototype.setReadonly = function(readonly) {
   }
 };
 
-// adds a new boundary for area
-toe.Area.prototype.addBorder = function(latLng) {
-  console.log("add new border: ", this.name, latLng);
+// adds a new vertex for area
+toe.Area.prototype.addVertex = function(latLng) {
+  console.log("add new vertex: ", this.name, latLng);
 
   var path = this.polygon.getToePath();
   for (var i = 0; i < path.length; i++) {
@@ -1460,12 +1456,12 @@ toe.Area.prototype.addBorder = function(latLng) {
   var idx = toe.util.getNearestVertex(this.polygon.getToePath(), latLng)
   this.polygon.addToPath(idx, latLng);
 
-  // see if this is already exists in boundaries array
-  //var cmd = new toe.command.AddBoundary(latLng, this);
+  // see if this is already exists in vertices array
+  //var cmd = new toe.command.Addvertex(latLng, this);
   //cmd.execute();
-  toe.BoundaryManager.add(latLng, this);
+  toe.VertexManager.add(latLng, this);
   if (this.isActive()) {
-    this._showBorderMarker(latLng);
+    this._showVertexMarker(latLng);
   }
 };
 
@@ -1475,7 +1471,7 @@ toe.Area.prototype.remove = function() {
   this._removeMarkers();
   var path = this.polygon.getToePath();
   for (var i = 0; i < path.length; i++) {
-    toe.BoundaryManager.removeByLatLng(path[i], this);
+    toe.VertexManager.removeByLatLng(path[i], this);
   }
   toe.AreaManager.active_area = null;
 };
@@ -1557,56 +1553,33 @@ toe.Area.prototype.getPOIs = function() {
   return area_pois;
 };
 
-toe.Area.prototype._showBorderMarker = function(latLng) {
-  console.log("_showBorderMarker ", latLng);
+toe.Area.prototype._showVertexMarker = function(latLng) {
+  console.log("_showVertexMarker ", latLng);
 
   var self = this;
   // marker drag functionality
-  var boundaries = toe.BoundaryManager.find(latLng);
-  if (boundaries.length == 0) console.log("FATAL ERROR: no boundary found for this marker!");
-  var boundary = boundaries[0];
+  var vertices = toe.VertexManager.find(latLng);
+  if (vertices.length == 0) console.log("FATAL ERROR: no vertex found for this marker!");
+  var vertex = vertices[0];
 
-  var marker = new toe.map.AreaBorderMarker({
+  var marker = new toe.map.AreaVertexMarker({
     position: latLng,
     title: tr('Drag to edit, dbl click to remove')
   });
-  this.border_markers.push(marker);
-
-  marker.setDrag(function(event) {
-    if (boundary) {
-      //if (shift_is_down) {
-      if (false) {
-        // if user is dragging marker with shift key down,
-        // move only marker belonging to this area
-        var latLng = toe.map.getEventLatLng(event);
-        boundary.move(latLng, self);
-      } else {
-          /*
-        // normally drag marker for all areas linked here
-        boundary.move(event.latLng);
-        // snap to another boundary within 5 px range
-        var boundary_near = boundary.findNearBoundary(5);
-        if (boundary_near) { 
-          boundary.move(boundary_near.latLng);
-          marker.setPosition(boundary_near.latLng);
-          //console.log("NEAR: ", boundary_near);
-        }*/
-      }
-    } 
-  });
+  this.vertex_markers.push(marker);
 
   marker.setDragEnd(function(event) {
-    if (boundary) {
+    if (vertex) {
       var latLng = this.getToeLatLng();
-      boundary.move(latLng);
+      vertex.move(latLng);
 
-      if (toe.options.snap_boundaries > 0) {
-        // snap to another boundary within some range
-        var boundary_near = boundary.findNearBoundary(toe.options.snap_boundaries);
-        if (boundary_near) { 
-          boundary_near.merge(boundary);
-          marker.setToeLatLng(boundary_near.latLng);
-          boundary = boundary_near;
+      if (toe.options.snap_vertices > 0) {
+        // snap to another vertex within some range
+        var vertex_near = vertex.findNearVertex(toe.options.snap_vertices);
+        if (vertex_near) {
+          vertex_near.merge(vertex);
+          marker.setToeLatLng(vertex_near.latLng);
+          vertex = vertex_near;
           //boundary.merge(boundary_near);
           //self.removeDuplicateMarkers();
         }
@@ -1614,7 +1587,7 @@ toe.Area.prototype._showBorderMarker = function(latLng) {
 
       // try to merge this boundary if it snapped with other boundary
       /*
-      if (toe.BoundaryManager.mergeBoundary(boundary) === true) {
+      if (toe.VertexManager.mergeVertex(vertex) === true) {
         // dragging ended so that we merged it with another
         // let's see if we have now two markers in the same place, if so, remove other
         self.removeDuplicateMarkers();
@@ -1624,9 +1597,9 @@ toe.Area.prototype._showBorderMarker = function(latLng) {
 
   // marker delete functionality
   marker.setDoubleClick(function(event) {
-    //if (boundary && shift_is_down) {
-    if (boundary) {
-      toe.command.run(new toe.command.RemoveBorder(self, boundary.latLng));
+    //if (vertex && shift_is_down) {
+    if (vertex) {
+      toe.command.run(new toe.command.RemoveVertex(self, vertex.latLng));
       //marker.remove();
       //if (area.polygon.path.getLength == 0) {
       //console.log("we should destroy the area now!");
@@ -1641,14 +1614,14 @@ toe.Area.prototype._showBorderMarker = function(latLng) {
 
 // remove duplicate markers from this area
 toe.Area.prototype.removeDuplicateMarkers = function() {
-  for (var i = 0; i < this.border_markers.length; i++) {
-    for (var j = i + 1; j < this.border_markers.length; j++) {
-      var pos1 = this.border_markers[i].getToeLatLng();
-      var pos2 = this.border_markers[j].getToeLatLng();
+  for (var i = 0; i < this.vertex_markers.length; i++) {
+    for (var j = i + 1; j < this.vertex_markers.length; j++) {
+      var pos1 = this.vertex_markers[i].getToeLatLng();
+      var pos2 = this.vertex_markers[j].getToeLatLng();
       if (pos1.equals(pos2)) {
         console.log("removed duplicate marker");
-        this.border_markers[j].remove();
-        this.border_markers.splice(j, 1);
+        this.vertex_markers[j].remove();
+        this.vertex_markers.splice(j, 1);
         return true; // duplicate removed
       }
     }
@@ -1657,14 +1630,14 @@ toe.Area.prototype.removeDuplicateMarkers = function() {
 };
 
 /**
- * Removes border marker by given latLng.
+ * Removes vertex marker by given latLng.
  */
-toe.Area.prototype.removeBorderMarker = function(latLng) {
-  for (var i = 0; i < this.border_markers.length; i++) {
-    var pos = this.border_markers[i].getToeLatLng();
+toe.Area.prototype.removeVertexMarker = function(latLng) {
+  for (var i = 0; i < this.vertex_markers.length; i++) {
+    var pos = this.vertex_markers[i].getToeLatLng();
     if (latLng.equals(pos)) {
-      this.border_markers[i].remove();
-      this.border_markers.splice(i, 1);
+      this.vertex_markers[i].remove();
+      this.vertex_markers.splice(i, 1);
     }
   }
 };
@@ -1685,12 +1658,12 @@ toe.Area.prototype.isActive = function() {
 
 // remove markers
 toe.Area.prototype._removeMarkers = function() {
-  if (this.border_markers) {
-    for (var i in this.border_markers) {
-      this.border_markers[i].remove();
+  if (this.vertex_markers) {
+    for (var i in this.vertex_markers) {
+      this.vertex_markers[i].remove();
     }
     // clear the array (and remove the markers from memory)
-    this.border_markers.length = 0;
+    this.vertex_markers.length = 0;
   }
 };
 
