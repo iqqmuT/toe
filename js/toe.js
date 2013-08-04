@@ -1196,6 +1196,10 @@ toe.Vertex.prototype.move = function(latLng, area) {
     }
   } // for
   this.latLng = latLng; //  update our information at last
+  if (this.marker) {
+    // move marker too
+    this.marker.setToeLatLng(this.latLng);
+  }
 };
 
 
@@ -1323,7 +1327,6 @@ toe.Vertex.prototype.showMarker = function() {
       var vertex_near = self.findNearVertex(toe.options.snap_vertices);
       if (vertex_near) {
         self.move(vertex_near.latLng);
-        self.marker.setToeLatLng(vertex_near.latLng);
         self.merge(vertex_near);
       }
     }
@@ -1331,7 +1334,6 @@ toe.Vertex.prototype.showMarker = function() {
 
   // marker delete functionality
   this.marker.setDoubleClick(function(event) {
-    //if (vertex && shift_is_down) {
     toe.command.run(new toe.command.RemoveVertex(toe.AreaManager.active_area, self.latLng));
   });
 };
