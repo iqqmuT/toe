@@ -854,25 +854,33 @@ toe.command.MoveVertex.prototype.undo = function() {
   }
 };
 
-// Merge vertices
-toe.command.MergeVertices = function(area, target_boundary, boundary) {
-  this.area = area;
-  this.oldLatLng = boundary.latLng
-  this.newLatLng = target_boundary.latLng;
+/**
+ * Merges second vertex into first vertex.
+ * Second vertex will be destroyed.
+ */
+toe.command.MergeVertices = function(firstVertex, secondVertex) {
+  this.oldAreas = $.merge([], secondVertex.areas); // make a copy of areas
+  this.newLatLng = firstVertex.latLng;
+  this.oldLatLng = secondVertex.latLng;
 };
 
 toe.command.MergeVertices.prototype.execute = function() {
-  var oldVertex = toe.VertexManager.findOne(this.oldLatLng);
-  var newVertex = toe.VertexManager.findOne(this.newLatLng);
-  if (oldVertex && newVertex) {
-    //newVertex.merge(oldVertex);
-    oldVertex.merge(newVertex);
+  var firstVertex = toe.VertexManager.findOne(this.newLatLng);
+  var secondVertex = toe.VertexManager.findOne(this.oldLatLng);
+  if (firstVertex && secondVertex) {
+    secondVertex.move(firstVertex.latLng);
+    secondVertex.merge(firstVertex);
     return { success: true };
   }
   return { success: false };
 };
 
 toe.command.MergeVertices.prototype.undo = function() {
+  var vertex = toe.VertexManager.findOne(this.newLatLng);
+  if (vertex) {
+    var newVertex = vertex.split(this.oldAreas);
+    vertex.move(this.oldLatLng);
+  }
 };
 
 // ------------------------------------------------------------
@@ -1209,27 +1217,6 @@ toe.VertexManager = new function() {
       }
     }
   };
-
-  // returns true if merged two vertices having same position
-  // or false if no merging happened
-  this.mergeVertex = function(vertex) {
-    for (var i = 0; i < this.vertices.length; i++) {
-      var other_vertex = this.vertices[i];
-      if (vertex == other_vertex) continue;
-      if (vertex.latLng.equals(other_vertex.latLng)) {
-        for (var j = 0; j < other_vertex.areas.length; j++) {
-          // copy areas from other vertex
-          vertex.areas.push(other_vertex.areas[j]);
-        }
-        //  remove vertex
-        //this.remove(other_vertex);
-        this.vertices.splice(i, 1);
-        delete other_vertex;
-        return true; // merged 
-      }
-    }
-    return false; // not merged
-  };
 }; // VertexManager
 
 
@@ -1278,7 +1265,7 @@ toe.Vertex.prototype.linkTo = function(area) {
 // it is assigned to
 toe.Vertex.prototype.unlink = function(area) {
   console.log("vertex.remove(", area, ")");
-  var new_areas = [];
+  var newAreas = [];
   for (var i = 0; i < this.areas.length; i++) {
     if (!area || (area && this.areas[i] == area)) {
       if (this.areas[i].polygon.removeFromPath(this.latLng)) {
@@ -1296,12 +1283,12 @@ toe.Vertex.prototype.unlink = function(area) {
     }
     else {
       // preserve this area
-      new_areas.push(this.areas[i]);
+      newAreas.push(this.areas[i]);
     }
   } // for
   // replace areas, now given area should be missing
   // (or all areas)
-  this.areas = new_areas;
+  this.areas = newAreas;
   // remove marker if visible
   this.removeMarker();
 };
@@ -1329,26 +1316,29 @@ toe.Vertex.prototype.findNearVertex = function(latLng, range) {
 
 /**
  * Merges given vertex into this vertex.
- * Given vertex should have same latLng.
  * Removes given vertex.
  */
 toe.Vertex.prototype.merge = function(vertex) {
-  console.log('Vertex.merge()', this.areas);
-  vertex.move(this.latLng);
-  var unlinkAreas = [];
-  // add areas
-  for (var i = 0; i < vertex.areas.length; i++) {
-    var added = this.linkTo(vertex.areas[i]);
-    if (!added) {
-      unlinkAreas.push(vertex.areas[i]);
-    }
-  }
-  for (var i = 0; i < unlinkAreas.length; i++) {
-    vertex.unlink(unlinkAreas[i]);
-  }
+  console.log('Vertex.merge()', vertex.areas, '->', this.areas);
+  // merge areas
+  $.merge(this.areas, vertex.areas);
   vertex.areas = [];
   toe.VertexManager.remove(vertex);
-  this.showMarker();
+};
+
+/**
+ * Splits vertex into two vertices.
+ * Given areas are for new vertex and they are removed from this
+ * vertex object. Returns new vertex.
+ */
+toe.Vertex.prototype.split = function(areas) {
+  console.log('Vertex.split', areas);
+  var newVertex = new toe.Vertex(this.latLng);
+  newVertex.areas = toe.util.arrayDifference(this.areas, areas);
+  // make a copy of areas
+  this.areas = $.merge([], areas);
+  toe.VertexManager.vertices.push(newVertex);
+  return newVertex;
 };
 
 /**
@@ -1382,9 +1372,9 @@ toe.Vertex.prototype.showMarker = function() {
     var merged = false;
     if (toe.options.snap_vertices > 0) {
       // snap to another vertex within some range
-      var vertex_near = self.findNearVertex(latLng, toe.options.snap_vertices);
-      if (vertex_near) {
-        toe.command.run(new toe.command.MergeVertices(toe.AreaManager.active_area, self, vertex_near));
+      var vertexNear = self.findNearVertex(latLng, toe.options.snap_vertices);
+      if (vertexNear) {
+        toe.command.run(new toe.command.MergeVertices(vertexNear, self));
         merged = true;
       }
     }
@@ -1868,4 +1858,15 @@ toe.util = {
     return d;
   },
 
+  // returns array of items in a which are not in b
+  // arrays must not include duplicates
+  arrayDifference: function(a, b) {
+    var result = [];
+    for (var i = 0; i < a.length; i++) {
+      if ($.inArray(a[i], b) == -1) {
+        result.push(a[i]);
+      }
+    }
+    return result;
+  }
 };
