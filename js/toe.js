@@ -163,7 +163,7 @@ toe.importData = function(data) {
   var areas_imported = toe.AreaManager.importJSON(data.areas);
   //var pois_imported = toe.PoiManager.importJSON(data.pois);
   var pois_imported;
-  console.log("areas imported: " + areas_imported);
+  console.log("areas imported: ", areas_imported);
   //console.log("POIs imported: " + pois_imported);
   if (pois_imported || areas_imported) {
     toe.dialog.OpenFile.close(); // we can close the dialog now
@@ -271,7 +271,7 @@ toe.control = {
       $main_div.append($settings);
 
       $clear = createMode('<img src="images/tango/edit-clear.png"/>', icon_css, tr("Clear drawings"), function() {
-        toe.dialog.Settings.open();
+        toe.command.run(new toe.command.ClearAll());
       });
       $main_div.append($clear);
 
@@ -891,7 +891,6 @@ toe.command.RemoveArea = function(area) {
   // make a copy of path
   this.path = $.merge([], area.polygon.getToePath());
   this.activated = area.isActive();
-  console.log(this.path);
 };
 
 toe.command.RemoveArea.prototype.execute = function() {
@@ -908,6 +907,22 @@ toe.command.RemoveArea.prototype.undo = function() {
     toe.VertexManager.add(this.path[i], this.area);
   }
   this.area.activate();
+};
+
+/**
+ * Clears everything.
+ */
+toe.command.ClearAll = function() {
+  this.areas = $.parseJSON(toe.AreaManager.toJSON());
+};
+
+toe.command.ClearAll.prototype.execute = function() {
+  toe.AreaManager.removeAll();
+  return { success: true };
+};
+
+toe.command.ClearAll.prototype.undo = function() {
+  var areas_imported = toe.AreaManager.importJSON(this.areas);
 };
 
 // ------------------------------------------------------------
