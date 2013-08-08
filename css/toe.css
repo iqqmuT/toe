@@ -116,3 +116,9 @@ body {
 
 .mode-poi { background-position: 0px -176px; }
 .mode-poi.selected { background-position: 0px -112px; }
+
+/* Functions table in help dialog */
+.functions th { text-align: left; }
+.functions td { padding-right: 10px; }
+
+

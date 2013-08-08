@@ -33,7 +33,7 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link type="text/css" href="http://code.jquery.com/ui/1.10.2/themes/ui-darkness/jquery-ui.css" rel="stylesheet" />
-    <link type="text/css" href="css/area.css?v=1.0" rel="stylesheet" />
+    <link type="text/css" href="css/toe.css?v=1.0" rel="stylesheet" />
     <? if ($maplib == $JS_MAP_GOOGLE) { ?>
       <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
     <? } ?>
