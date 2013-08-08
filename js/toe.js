@@ -717,9 +717,10 @@ toe.dialog = {
         'autoOpen': false,
         'resizable': false
       });
+      $('#settings_form').submit(saveSettings);
     };
 
-    this.save = function() {
+    var saveSettings = function() {
       // save settings from the dialog
       console.log("save settings");
       // save settings to cookie with ajax, get response as json
