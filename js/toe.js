@@ -883,6 +883,33 @@ toe.command.MergeVertices.prototype.undo = function() {
   }
 };
 
+/**
+ * Removes area.
+ */
+toe.command.RemoveArea = function(area) {
+  this.area = area;
+  // make a copy of path
+  this.path = $.merge([], area.polygon.getToePath());
+  this.activated = area.isActive();
+  console.log(this.path);
+};
+
+toe.command.RemoveArea.prototype.execute = function() {
+  toe.AreaManager.remove(this.area);
+  return { success: true };
+};
+
+toe.command.RemoveArea.prototype.undo = function() {
+  this.area.polygon.setPath(this.path);
+  this.area.show();
+  toe.AreaManager.add(this.area);
+  // recreate vertices
+  for (var i = 0; i < this.path.length; i++) {
+    toe.VertexManager.add(this.path[i], this.area);
+  }
+  this.area.activate();
+};
+
 // ------------------------------------------------------------
 // Handler
 // ------------------------------------------------------------
@@ -1640,12 +1667,8 @@ toe.Area.prototype.showInfoWindow = function() {
         console.log("print this?");
       });
       $('#area_delete').off('click').on('click', function(event) {
-
-        if (confirm(tr('area_removal_confirm'))) {
-          if (toe.AreaManager.remove(self)) {
-            toe.map.infoWindow.hide(); // shut info window
-          }
-        }
+        toe.command.run(new toe.command.RemoveArea(self));
+        toe.map.infoWindow.hide(); // shut info window
         return false;
       });
     }

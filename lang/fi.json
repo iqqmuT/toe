@@ -27,7 +27,6 @@
   "Change settings": "Muuta asetuksia",
   "Language": "Kieli",
   "poi_removal_confirm": "Oletko varma, että haluat poistaa tämän POIn?",
-  "area_removal_confirm": "Oletko varma, että haluat poistaa valitun alueen?",
   "unsaved_changes": "Menetät tallentamattomat tiedot, jos lähdet pois tältä sivulta. Klikkaa 'Tallenna tiedosto...' valikosta tallentaaksesi muutokset.",
   "setting_changes_note": "Huom. Kun olet muuttanut asetuksia, voit joutua lataamaan tämän sivun uudelleen. Tallenna tekemäsi työt sitä ennen.",
   "help_dialog": "<p>TOE (lyhenne sanoista TOE Online Editor).</p><h2>Tiedostot</h2><p>TOEssa ei ole tietokantatukea. Voit tuoda ja viedä dataa tiedostojen avulla.</p><h2>Miten muokata</h2><p><img src=\"images/help_control1.png\" width=\"107\" height=\"40\" alt=\"control\" style=\"float: right\"/>Oikealta laidalta voit valita, mitä tasoa olet muokkaamassa. Voit muokata vain yhtä tasoa kerrallaan. Klikkaamalla silmää voit piilottaa tai tuoda näkyviin tason.</p><p>Jos klikkaat karttaa shift-näppäin pohjassa, voit lisätä tai poistaa POI:ta tai alueiden rajoja. Klikkaamalla aluetta voit aktivoida sen, ja klikkaamalla uudelleen aktivoitua aluetta voit muokata sen tietoja. Klikkaamalla POIta voit muokata sen tietoja.</p><p>Lisää ohjeita löydät <a href=\"doc/en/userguide.html\" target=\"_blank\">User's guide</a></p><p>Tällä ohjelmistolla on vapaa lähdekoodi. Se on saatavissa: <a href=\"https://github.com/iqqmuT/toe\">github</a>.</p>"

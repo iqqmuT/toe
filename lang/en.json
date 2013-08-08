@@ -27,7 +27,6 @@
   "Change settings": "Change settings",
   "Language": "Language",
   "poi_removal_confirm": "Are you sure you want to delete this POI?",
-  "area_removal_confirm": "Are you sure you want to delete the selected area?",
   "unsaved_changes": "You will lose unsaved changes if you leave the page. Click 'Save file...' from menu to save the changes.",
   "setting_changes_note": "Note: After changing settings you might need to reload this page. Please save your data before that.",
   "Printable area": "Printable area is shown as a grey box on the map.",
