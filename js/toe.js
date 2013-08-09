@@ -314,7 +314,7 @@ toe.control = {
         'color': 'rgb(0,0,0)',
         'font-family': 'Arial,sans-serif',
         'font-size': '13px',
-        'background': '-moz-linear-gradient(center top, rgb(255,255,255), rgb(230,230,230)) repeat scroll 0% 0% transparent',
+        'background': 'linear-gradient(to top, rgb(255,255,255), rgb(230,230,230)) repeat scroll 0 0 transparent',
         'padding': '4px',
         'border': '1px solid rgb(113, 123, 135)',
         'box-shadow': '0pt 2px 4px rgba(0, 0, 0, 0.4)',
