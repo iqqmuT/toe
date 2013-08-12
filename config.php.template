@@ -13,7 +13,13 @@ $cfg['js_map_library'] = $JS_MAP_GOOGLE;
 
 // supported mapnik styles when printing (export/mapnik/styles.json)
 $cfg['mapnik_styles'] = array(
-    'default' => 'Default'
+    '144x93' => '144 x 93 mm',
+    '144x187' => '144 x 187 mm',
+    'a4' => 'A4',
+    'a3' => 'A3',
+    'a2' => 'A2',
+    'a1' => 'A1',
+    'a0' => 'A0'
 );
 
 // --------------------------------------------------------------

@@ -43,8 +43,52 @@
   "margin":            [ 50, 50 ],
   "map_size":          [ 742, 495 ],
   "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
-  "area_border_width": 4,
+  "area_border_width": 3,
   "zoom":              0.8,
+  "orientation":       "auto"
+},
+
+"a3": {
+  "unit":              "mm",
+  "paper_size":        [ 420, 297 ],
+  "margin":            [ 13, 13 ],
+  "map_size":          [ 394, 271 ],
+  "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
+  "area_border_width": 3,
+  "zoom":              0.6,
+  "orientation":       "auto"
+},
+
+"a2": {
+  "unit":              "mm",
+  "paper_size":        [ 594, 420 ],
+  "margin":            [ 13, 13 ],
+  "map_size":          [ 568, 394 ],
+  "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
+  "area_border_width": 3,
+  "zoom":              0.6,
+  "orientation":       "auto"
+},
+
+"a1": {
+  "unit":              "mm",
+  "paper_size":        [ 841, 594 ],
+  "margin":            [ 13, 13 ],
+  "map_size":          [ 815, 568 ],
+  "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
+  "area_border_width": 3,
+  "zoom":              0.6,
+  "orientation":       "auto"
+},
+
+"a0": {
+  "unit":              "mm",
+  "paper_size":        [ 1189, 841 ],
+  "margin":            [ 13, 13 ],
+  "map_size":          [ 1163, 815 ],
+  "area_border_color": [ 0.8, 0.0, 0.0, 0.8 ],
+  "area_border_width": 3,
+  "zoom":              0.6,
   "orientation":       "auto"
 }
 
