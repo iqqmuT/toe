@@ -57,6 +57,10 @@ http://phpqrcode.sourceforge.net/
 
 Give right permission for web server to write into db directory. It will be used for archiving map hashes used in QR codes.
 
+## Try it
+
+http://toe.fi
+
 ## License
 
 TOE is published under GPLv3 license [http://www.gnu.org/licenses/gpl-3.0.html].
