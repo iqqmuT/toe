@@ -164,6 +164,7 @@ class MapnikPDFExport extends MapnikExport {
 
         $cwd = $cfg['mapnik_home'];
         $cmd = $this->getCommand();
+        $input_data = '{"areas":' . $_POST['areas'] . ',"pois":' . $_POST['pois'] . '}';
         $process = proc_open($cmd, $descriptorspec, $pipes, $cwd);
 
         $return_value = -1;
@@ -172,9 +173,7 @@ class MapnikPDFExport extends MapnikExport {
             // 0 => writeable handle connected to child stdin
             // 1 => readable handle connected to child stdout
             // Any error output will be appended to /tmp/error-output.txt
-
-            $data = '{"areas":' . $_POST['areas'] . ',"pois":' . $_POST['pois'] . '}';
-            fwrite($pipes[0], $data);
+            fwrite($pipes[0], $input_data);
             fclose($pipes[0]);
 
             $output = stream_get_contents($pipes[1]);

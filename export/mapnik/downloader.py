@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with TOE.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import sys
 import Queue
 import threading
 import urllib3
@@ -33,9 +34,12 @@ class DownloadThread(threading.Thread):
             data = self.queue.get()
             r = self.manager.request(method='GET', url=data['url'], headers=data['headers'])
             # write output to a file
-            f = open(data['output'], 'w')
-            f.write(r.data)
-            f.close()
+            try:
+                f = open(data['output'], 'w')
+                f.write(r.data)
+                f.close()
+            except IOError as e:
+                sys.stderr.write('Could not save file: ' + str(e) + "\n")
             self.queue.task_done()
 
 class Downloader(object):
@@ -49,7 +53,6 @@ class Downloader(object):
             t.start()
 
     def download(self, output, url, headers=None):
-         print "URL: " + url
          self.queue.put({ 'output':  output,
                           'url':     url,
                           'headers': headers })

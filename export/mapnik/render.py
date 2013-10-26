@@ -5,13 +5,13 @@
 # Example:
 # cd ~/mapnik-stylesheets
 # echo '{"areas":[],"pois":[]}' | ../www/toe/export/mapnik/render.py -b "((61.477925877956785, 21.768811679687474), (61.488948601502614, 21.823743320312474))" -s 144x93
-
 import sys, os
 import mapnik2
 import cairo
 import json
 import argparse
 import tempfile
+import shutil
 from globalmaptiles import GlobalMercator
 from tileloader import GoogleTileLoader, TMSTileLoader, FTileLoader
 
@@ -215,10 +215,31 @@ class CustomMapLayer(Layer):
         self.tileloader = None
         if self.style.get('map_tiles') is not None:
             self.options = self.style.get('map_tiles')
-            min_lon = float(bounds[0])
-            min_lat = float(bounds[1])
-            max_lon = float(bounds[2])
-            max_lat = float(bounds[3])
+
+            merc = mapnik2.Projection('+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over')
+
+            # long/lat in degrees, aka ESPG:4326 and "WGS 84"
+            longlat = mapnik2.Projection('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+            # can also be constructed as:
+            #longlat = mapnik.Projection('+init=epsg:4326')
+
+            # Our bounds above are in long/lat, but our map
+            # is in spherical mercator, so we need to transform
+            # the bounding box to mercator to properly position
+            # the Map when we call `zoom_to_box()`
+            transform = mapnik2.ProjTransform(merc, longlat)
+
+            envis = self.m.envelope()
+            envelope = transform.forward(envis)
+            #min_lon = float(bounds[0])
+            #min_lat = float(bounds[1])
+            #max_lon = float(bounds[2])
+            #max_lat = float(bounds[3])
+            min_lon = envelope.minx
+            min_lat = envelope.miny
+            max_lon = envelope.maxx
+            max_lat = envelope.maxy
+
             width = 512
             if self.options['indexing'] == 'google':
                 self.tileloader = GoogleTileLoader(min_lat, min_lon, max_lat, max_lon, width)
@@ -236,7 +257,6 @@ class CustomMapLayer(Layer):
         tiles = list()
         tile_files = self.tileloader.download(self.cache_dir, self.options['url'], self.options['http_headers'])
         for filename in tile_files:
-            print "TILE: " + filename
             tile = TileLayer(self.renderer, filename, self.mercator)
             tiles.append(tile)
         return tiles
@@ -288,7 +308,6 @@ class MapnikRenderer:
 
     STYLES_FILE="styles.json"
     COPYRIGHT_TEXT="© OpenStreetMap contributors, CC-BY-SA"
-    TILE_CACHE_DIR="/tmp/tilecache"
 
     def __init__(self, areas):
         self.areas = areas
@@ -302,6 +321,7 @@ class MapnikRenderer:
         except KeyError:
             mapfile = "osm.xml"
 
+        tile_cache_dir = None
         (tmp_file_handler, tmp_file) = tempfile.mkstemp()
         map_uri = tmp_file
 
@@ -324,7 +344,8 @@ class MapnikRenderer:
         # is in spherical mercator, so we need to transform
         # the bounding box to mercator to properly position
         # the Map when we call `zoom_to_box()`
-        self.transform = mapnik2.ProjTransform(longlat,merc)
+        self.transform = mapnik2.ProjTransform(longlat, merc)
+        self.transform2 = mapnik2.ProjTransform(merc, longlat)
         self.merc_bbox = self.transform.forward(bbox)
 
         # auto switch paper and map orientation
@@ -370,12 +391,19 @@ class MapnikRenderer:
         # create layers
         layers = list()
         layers.append(MapnikLayer(self))
-        layers.append(CustomMapLayer(self, self.TILE_CACHE_DIR, bounds))
+        # create tile cache dir
+
+        if self.has_custom_map():
+            tile_cache_dir = tempfile.mkdtemp()
+            layers.append(CustomMapLayer(self, tile_cache_dir, bounds))
+
         layers.append(AreaLayer(self, self.areas))
-        layers.append(CopyrightLayer(self, self.COPYRIGHT_TEXT))
+
+        if not self.has_custom_map():
+            layers.append(CopyrightLayer(self, self.COPYRIGHT_TEXT))
 
         if qrcode and self.style.get('qrcode', True):
-            layers.append(QRCodeLayer(qrcode))
+            layers.append(QRCodeLayer(self, qrcode))
 
         # draw layers
         for layer in layers:
@@ -384,16 +412,9 @@ class MapnikRenderer:
         surface.finish()
         self.output_file = map_uri
 
-    """
-    Parses STYLES_FILE json file and saves data to self.style.
-    """
-    #def _parse_styles_file(self, style_name):
-    #    styles_file = os.path.join(sys.path[0], self.STYLES_FILE)
-    #    f = open(styles_file, 'r')
-    #    data = f.read()
-    #    f.close()
-    #    obj = json.loads(data)
-    #    self.style = obj[style_name]
+        # remove tile cache dir
+        if tile_cache_dir is not None:
+            shutil.rmtree(tile_cache_dir)
 
     def get_map(self):
         return self.m
@@ -419,18 +440,6 @@ class MapnikRenderer:
     def get_zoom(self):
         return self.zoom
 
-    #def _print_qr_code(self, qrcode):
-        #self.ctx.save()
-        #zoom = 0.3
-        #self.ctx.scale(zoom, zoom)
-        #img = cairo.ImageSurface.create_from_png(qrcode)
-        #margin = self.style.get_px('qrcode_margin', [ 0, 0 ])
-        #x = int(1 / zoom * self.map_size[0]) - img.get_width() - margin[0]
-        #y = int(1 / zoom * self.map_size[1]) - img.get_height() - margin[1]
-        #self.ctx.set_source_surface(img, x, y)
-        #self.ctx.paint()
-        #self.ctx.restore()
-
     def _get_sizes(self):
         self.paper_size = self.style.get_px('paper_size')
         self.map_size = self.style.get_px('map_size')
@@ -442,37 +451,8 @@ class MapnikRenderer:
     def get_output(self):
         return self.output_file
 
-    #def _draw_tile(self):
-        #mercator = GlobalMercator()
-        #tx = 9183
-        #ty = 11764
-        #tz = 14
-        #(min_lat, min_lon, max_lat, max_lon) = mercator.TileLatLonBounds(tx, ty, tz)
-        ##print min_lat, min_lon, max_lat, max_lon
-        #coord = self._convert_point([max_lat, min_lon])
-        #coord2 = self._convert_point([min_lat, max_lon])
-
-        #self.ctx.move_to(coord.x, coord.y)
-        #self.ctx.line_to(coord2.x, coord2.y)
-
-        #print str(coord)
-        #print str(coord2)
-        #tile_slot_width = coord2.x - coord.x
-        #tile_file = '/home/tumppi/www/toe/export/mapnik/tilecache/14_9183_11764.png'
-        #self.ctx.save()
-        #self.ctx.move_to(coord.x, coord.y)
-        #img = cairo.ImageSurface.create_from_png(tile_file)
-        #zoom = tile_slot_width / 256
-        ##zoom = 0.26
-        ##zoom = 0.3
-        #self.ctx.scale(zoom, zoom)
-        #print "sizes: ", str(img.get_width()), tile_slot_width
-        #margin = self.style.get_px('qrcode_margin', [ 0, 0 ])
-        #x = int(1 / zoom * self.map_size[0]) - img.get_width() - margin[0]
-        #y = int(1 / zoom * self.map_size[1]) - img.get_height() - margin[1]
-        #self.ctx.set_source_surface(img, int(1 / zoom * coord.x), int(1 / zoom * coord.y))
-        #self.ctx.paint()
-        #self.ctx.restore()
+    def has_custom_map(self):
+        return self.style.get('map_tiles') is not None
 
 if __name__ == "__main__":
 
@@ -493,6 +473,3 @@ if __name__ == "__main__":
     r.render(args.style, args.qrcode)
     fn = r.get_output()
     sys.stdout.write("%s" % fn)
-
-    #m = mapnik.Map(imgx,imgy)
-    #mapnik.load_map(m,mapfile)
