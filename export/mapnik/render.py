@@ -19,7 +19,6 @@ from tileloader import GoogleTileLoader, TMSTileLoader, FTileLoader
 #sys.stdout.write("pois: '" + str(areas) + "'\n")
 #sys.exit(0)
 
-
 # ensure minimum mapnik version
 if not hasattr(mapnik2,'mapnik_version') and not mapnik2.mapnik_version() >= 600:
     raise SystemExit('This script requires Mapnik >=0.6.0)')
@@ -107,18 +106,6 @@ class Layer(object):
         """Implement this in subclasses."""
         pass
 
-    def _convert_point(self, latlng):
-        """Converts given latlng to XY coordinates."""
-        coord = self._google_to_mapnik_coord(latlng)
-        merc_coord = self.renderer.get_transform().forward(coord)
-        view_coord = self.m.view_transform().forward(merc_coord)
-        return view_coord
-
-    # Google Maps uses LatLng, Mapnik uses LngLat!
-    def _google_to_mapnik_coord(self, latlng):
-        coord = mapnik2.Coord(latlng[1], latlng[0])
-        return coord
-
 class MapnikLayer(Layer):
     """Layer for Mapnik map."""
     def draw(self):
@@ -149,15 +136,12 @@ class AreaLayer(Layer):
         self.ctx.set_line_width(self.style.get('area_border_width'))
         self.ctx.stroke()
 
-        #self.ctx.scale(self.zoom_f, self.zoom_f)
         self.ctx.restore()
 
     def _draw_area(self, area):
-
-
         coords = list()
         for coord in area['path']:
-            coords.append(self._convert_point(coord))
+            coords.append(self.renderer.latlng_to_map(coord[0], coord[1]))
         if len(coords) < 2:
             pass # area has only one point?
 
@@ -208,7 +192,7 @@ class QRCodeLayer(Layer):
         self.ctx.restore()
 
 class CustomMapLayer(Layer):
-    def __init__(self, renderer, cache_dir, bounds):
+    def __init__(self, renderer, cache_dir):
         super(CustomMapLayer, self).__init__(renderer)
         self.cache_dir = cache_dir
         self.mercator = GlobalMercator()
@@ -216,25 +200,10 @@ class CustomMapLayer(Layer):
         if self.style.get('map_tiles') is not None:
             self.options = self.style.get('map_tiles')
 
-            merc = mapnik2.Projection('+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over')
-
-            # long/lat in degrees, aka ESPG:4326 and "WGS 84"
-            longlat = mapnik2.Projection('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-            # can also be constructed as:
-            #longlat = mapnik.Projection('+init=epsg:4326')
-
-            # Our bounds above are in long/lat, but our map
-            # is in spherical mercator, so we need to transform
-            # the bounding box to mercator to properly position
-            # the Map when we call `zoom_to_box()`
-            transform = mapnik2.ProjTransform(merc, longlat)
-
-            envis = self.m.envelope()
-            envelope = transform.forward(envis)
-            #min_lon = float(bounds[0])
-            #min_lat = float(bounds[1])
-            #max_lon = float(bounds[2])
-            #max_lat = float(bounds[3])
+            map_envelope = self.m.envelope()
+            # map_envelope is in mercator projection, convert it to
+            # long/lat projection
+            envelope = renderer.merc_to_lnglat(map_envelope)
             min_lon = envelope.minx
             min_lat = envelope.miny
             max_lon = envelope.maxx
@@ -279,26 +248,16 @@ class TileLayer(Layer):
 
     def draw(self):
         (min_lat, min_lon, max_lat, max_lon) = self.mercator.TileLatLonBounds(self.tx, self.ty, self.tz)
-        #print min_lat, min_lon, max_lat, max_lon
-        coord_nw = self._convert_point([max_lat, min_lon])
-        coord_se = self._convert_point([min_lat, max_lon])
+        coord_nw = self.renderer.latlng_to_map(max_lat, min_lon)
+        coord_se = self.renderer.latlng_to_map(min_lat, max_lon)
 
-        #self.ctx.move_to(coord_nw.x, coord_nw.y)
-        #self.ctx.line_to(coord_se.x, coord_se.y)
-
-        #print str(coord)
-        #print str(coord2)
         tile_width = coord_se.x - coord_nw.x
-        #tile_file = '/home/tumppi/www/toe/export/mapnik/tilecache/14_9183_11764.png'
         self.ctx.save()
-        #self.ctx.move_to(coord_nw.x, coord_nw.y)
+
         # assume it is png
         img = cairo.ImageSurface.create_from_png(self.filename)
         zoom = tile_width / 256
-        #zoom = 0.26
-        #zoom = 0.3
         self.ctx.scale(zoom, zoom)
-        #print "sizes: ", str(img.get_width()), tile_slot_width
         self.ctx.set_source_surface(img, int(1 / zoom * coord_nw.x), int(1 / zoom * coord_nw.y))
         self.ctx.paint()
         self.ctx.restore()
@@ -313,6 +272,18 @@ class MapnikRenderer:
         self.areas = areas
         self.style = None
 
+        # Set up projections
+        # long/lat in degrees, aka ESPG:4326 and "WGS 84"
+        # we get data in this projection
+        longlat = mapnik2.Projection('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
+
+        # Map uses spherical mercator (most common target map projection of osm data imported with osm2pgsql)
+        self.merc = mapnik2.Projection('+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over')
+
+        # transform objects (Box2d and Coord) to another projection
+        self.lnglat_to_merc_transform = mapnik2.ProjTransform(longlat, self.merc)
+        self.merc_to_lnglat_transform = mapnik2.ProjTransform(self.merc, longlat)
+
     def render(self, style_name, qrcode):
         self.style = StyleParser(self.STYLES_FILE, style_name)
 
@@ -325,28 +296,14 @@ class MapnikRenderer:
         (tmp_file_handler, tmp_file) = tempfile.mkstemp()
         map_uri = tmp_file
 
-        bounds = googleBoundsToBox2d(args.bbox)
-        if hasattr(mapnik2,'Box2d'):
-            bbox = mapnik2.Box2d(*bounds)
-        else:
-            bbox = mapnik2.Envelope(*bounds)
-
-        # Set up projections
-        # spherical mercator (most common target map projection of osm data imported with osm2pgsql)
-        merc = mapnik2.Projection('+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over')
-
-        # long/lat in degrees, aka ESPG:4326 and "WGS 84"
-        longlat = mapnik2.Projection('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')
-        # can also be constructed as:
-        #longlat = mapnik.Projection('+init=epsg:4326')
+        map_bounds = self.googleBoundsToBox2d(args.bbox)
 
         # Our bounds above are in long/lat, but our map
         # is in spherical mercator, so we need to transform
         # the bounding box to mercator to properly position
         # the Map when we call `zoom_to_box()`
-        self.transform = mapnik2.ProjTransform(longlat, merc)
-        self.transform2 = mapnik2.ProjTransform(merc, longlat)
-        self.merc_bbox = self.transform.forward(bbox)
+        # bbox is in long/lat, transform it to mercator projection
+        self.merc_bbox = self.lnglat_to_merc(map_bounds)
 
         # auto switch paper and map orientation
         # default orientation in styles is landscape
@@ -357,11 +314,11 @@ class MapnikRenderer:
         self.zoom_f = 1 / self.zoom # zoom factor
 
         self.m = mapnik2.Map(int(self.zoom_f * self.map_size[0]),
-                              int(self.zoom_f * self.map_size[1]))
+                             int(self.zoom_f * self.map_size[1]))
         mapnik2.load_map(self.m, mapfile)
 
         # ensure the target map projection is mercator
-        self.m.srs = merc.params()
+        self.m.srs = self.merc.params()
 
         # Mapnik internally will fix the aspect ratio of the bounding box
         # to match the aspect ratio of the target image width and height
@@ -391,11 +348,11 @@ class MapnikRenderer:
         # create layers
         layers = list()
         layers.append(MapnikLayer(self))
-        # create tile cache dir
 
         if self.has_custom_map():
+            # create temporary tile cache dir
             tile_cache_dir = tempfile.mkdtemp()
-            layers.append(CustomMapLayer(self, tile_cache_dir, bounds))
+            layers.append(CustomMapLayer(self, tile_cache_dir))
 
         layers.append(AreaLayer(self, self.areas))
 
@@ -422,8 +379,34 @@ class MapnikRenderer:
     def get_context(self):
         return self.ctx
 
-    def get_transform(self):
-        return self.transform
+    # Google bounds toString() gives following string:
+    # ((61.477925877956785, 21.768811679687474), (61.488948601502614, 21.823743320312474))
+    def googleBoundsToBox2d(self, google_bounds):
+        parts = google_bounds.split(",")
+        strip_str = "() "
+        min_lat = float(parts[0].strip(strip_str))
+        min_lng = float(parts[1].strip(strip_str))
+        max_lat = float(parts[2].strip(strip_str))
+        max_lng = float(parts[3].strip(strip_str))
+        return mapnik2.Box2d(min_lng, min_lat, max_lng, max_lat)
+
+    def latlng_to_map(self, lat, lng):
+        """Transforms given longlat Box2d or Coord to map projection."""
+        coord = mapnik2.Coord(lng, lat)
+        merc_coord = self.lnglat_to_merc(coord)
+        return self.merc_to_map(merc_coord)
+
+    def lnglat_to_merc(self, bbox):
+        """Transforms given longlat Box2d or Coord to merc projection."""
+        return self.lnglat_to_merc_transform.forward(bbox)
+
+    def merc_to_lnglat(self, bbox):
+        """Transforms given map Box2d or Coord to longlat projection."""
+        return self.merc_to_lnglat_transform.forward(bbox)
+
+    def merc_to_map(self, bbox):
+        """Transforms given merc Box2d or Coord to map projection."""
+        return self.m.view_transform().forward(bbox)
 
     def get_style(self):
         return self.style
@@ -433,9 +416,6 @@ class MapnikRenderer:
 
     def get_paper_size(self):
         return self.paper_size
-
-    def get_mercator(self):
-        return self.mercator
 
     def get_zoom(self):
         return self.zoom
