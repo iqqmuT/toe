@@ -109,7 +109,13 @@ class Layer(object):
 class MapnikLayer(Layer):
     """Layer for Mapnik map."""
     def draw(self):
+        zoom = self.style.get('zoom')
+        # save context
+        self.ctx.save()
+        self.ctx.scale(zoom, zoom)
         mapnik2.render(self.m, self.ctx)
+        # restore saved context
+        self.ctx.restore()
 
 class AreaLayer(Layer):
     """Layer for area borders."""
@@ -122,7 +128,7 @@ class AreaLayer(Layer):
         self.ctx.save()
 
         # apply zoom
-        zoom = self.renderer.get_zoom()
+        zoom = self.style.get('zoom')
         self.ctx.scale(zoom, zoom)
 
         for area in self.areas:
@@ -133,9 +139,10 @@ class AreaLayer(Layer):
                                   self.style.get('area_border_color')[1],
                                   self.style.get('area_border_color')[2],
                                   self.style.get('area_border_color')[3])
-        self.ctx.set_line_width(self.style.get('area_border_width'))
+        self.ctx.set_line_width(self.style.get('area_border_width') / zoom)
         self.ctx.stroke()
 
+        # restore saved context
         self.ctx.restore()
 
     def _draw_area(self, area):
@@ -224,7 +231,10 @@ class CustomMapLayer(Layer):
 
     def _get_tiles(self):
         tiles = list()
-        tile_files = self.tileloader.download(self.cache_dir, self.options['url'], self.options['http_headers'])
+        http_headers = None
+        if self.options.has_key('http_headers'):
+            http_headers = self.options['http_headers']
+        tile_files = self.tileloader.download(self.cache_dir, self.options['url'], http_headers)
         for filename in tile_files:
             tile = TileLayer(self.renderer, filename, self.mercator)
             tiles.append(tile)
@@ -343,7 +353,7 @@ class MapnikRenderer:
         # margins
         margin = self.style.get_px('margin')
         self.ctx.translate(margin[0],
-                            margin[1])
+                           margin[1])
 
         # create layers
         layers = list()
@@ -416,9 +426,6 @@ class MapnikRenderer:
 
     def get_paper_size(self):
         return self.paper_size
-
-    def get_zoom(self):
-        return self.zoom
 
     def _get_sizes(self):
         self.paper_size = self.style.get_px('paper_size')
