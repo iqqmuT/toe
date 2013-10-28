@@ -131,14 +131,18 @@ class AreaLayer(Layer):
         zoom = self.style.get('zoom')
         self.ctx.scale(zoom, zoom)
 
+        # do not draw lines outside the map
+        self.ctx.rectangle(0, 0, self.m.width, self.m.height)
+        self.ctx.clip()
+
         for area in self.areas:
             self._draw_area(area)
 
         # set brush color and line width
         self.ctx.set_source_rgba(self.style.get('area_border_color')[0],
-                                  self.style.get('area_border_color')[1],
-                                  self.style.get('area_border_color')[2],
-                                  self.style.get('area_border_color')[3])
+                                 self.style.get('area_border_color')[1],
+                                 self.style.get('area_border_color')[2],
+                                 self.style.get('area_border_color')[3])
         self.ctx.set_line_width(self.style.get('area_border_width') / zoom)
         self.ctx.stroke()
 
@@ -216,7 +220,7 @@ class CustomMapLayer(Layer):
             max_lon = envelope.maxx
             max_lat = envelope.maxy
 
-            width = 512
+            width = self.m.width
             if self.options['indexing'] == 'google':
                 self.tileloader = GoogleTileLoader(min_lat, min_lon, max_lat, max_lon, width)
             elif self.options['indexing'] == 'tms':
@@ -225,9 +229,16 @@ class CustomMapLayer(Layer):
                 self.tileloader = FTileLoader(min_lat, min_lon, max_lat, max_lon, width)
 
     def draw(self):
+        # clip drawing area, so everything out will be clipped
+        zoom = self.style.get('zoom')
+        self.ctx.save()
+        self.ctx.scale(zoom, zoom)
+        self.ctx.rectangle(0, 0, self.m.width, self.m.height)
+        self.ctx.clip()
         if self.tileloader is not None:
             for tile in self._get_tiles():
                 tile.draw()
+        self.ctx.restore()
 
     def _get_tiles(self):
         tiles = list()
@@ -257,6 +268,7 @@ class TileLayer(Layer):
             self.tx, self.ty, self.tz = int(parts[0]), int(parts[1]), int(parts[2])
 
     def draw(self):
+        zoom = self.style.get('zoom')
         (min_lat, min_lon, max_lat, max_lon) = self.mercator.TileLatLonBounds(self.tx, self.ty, self.tz)
         coord_nw = self.renderer.latlng_to_map(max_lat, min_lon)
         coord_se = self.renderer.latlng_to_map(min_lat, max_lon)
@@ -357,18 +369,23 @@ class MapnikRenderer:
 
         # create layers
         layers = list()
-        layers.append(MapnikLayer(self))
 
+        # map layer
         if self.has_custom_map():
             # create temporary tile cache dir
             tile_cache_dir = tempfile.mkdtemp()
             layers.append(CustomMapLayer(self, tile_cache_dir))
+        else:
+            layers.append(MapnikLayer(self))
 
+        # area borders layer
         layers.append(AreaLayer(self, self.areas))
 
+        # copyright layer
         if not self.has_custom_map():
             layers.append(CopyrightLayer(self, self.COPYRIGHT_TEXT))
 
+        # QR code layer
         if qrcode and self.style.get('qrcode', True):
             layers.append(QRCodeLayer(self, qrcode))
 
