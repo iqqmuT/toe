@@ -25,7 +25,7 @@ include("lib/common.php");
 $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
 
 ?>
-<html lang="<? print $lang; ?>">
+<html lang="<?php print $lang; ?>">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="description" content="Create and edit map areas online with your browser." />
@@ -34,29 +34,29 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link type="text/css" href="http://code.jquery.com/ui/1.10.2/themes/ui-darkness/jquery-ui.css" rel="stylesheet" />
     <link type="text/css" href="css/toe.css?v=1.0" rel="stylesheet" />
-    <? if ($maplib == $JS_MAP_GOOGLE) { ?>
+    <?php if ($maplib == $JS_MAP_GOOGLE) { ?>
       <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
-    <? } ?>
-    <? if ($maplib == $JS_MAP_OPEN_LAYERS) { ?>
+    <?php } ?>
+    <?php if ($maplib == $JS_MAP_OPEN_LAYERS) { ?>
       <script src="http://www.openlayers.org/api/OpenLayers.js" type="text/javascript" />
-    <? } ?>
-    <? if ($maplib == $JS_MAP_LEAFLET) { ?>
+    <?php } ?>
+    <?php if ($maplib == $JS_MAP_LEAFLET) { ?>
       <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
       <script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
-    <? } ?>
+    <?php } ?>
     <script type="text/javascript" src="http://code.jquery.com/jquery-2.0.0.min.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
     <script type="text/javascript" src="js/i18n.js"></script>
     <script type="text/javascript" src="js/toe.js?v=1.0"></script>
-    <script type="text/javascript" src="js/toe-<? print $maplib; ?>.js?v=1.0"></script>
+    <script type="text/javascript" src="js/toe-<?php print $maplib; ?>.js?v=1.0"></script>
     <script type="text/javascript">
       // set localization
-      var translations = <? print $localization->read_lang_file($lang); ?>;
-      setLanguage('<? print $lang; ?>', translations);
+      var translations = <?php print $localization->read_lang_file($lang); ?>;
+      setLanguage('<?php print $lang; ?>', translations);
       // initialize
       $(document).ready(function() {
         toe.init({
-          archive: <? print $archive_id; ?>
+          archive: <?php print $archive_id; ?>
         });
       });
     </script>
@@ -68,20 +68,20 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
     <!-- dialogs -->
     <div id="file_open_dialog" style="display:none">
       <form action="import.php" method="post" enctype="multipart/form-data" target="upload_target" id="import_form">
-        <? print tr("Supported file formats"); ?>: .osm<br />
+        <?php print tr("Supported file formats"); ?>: .osm<br />
         <input type="file" name="import_file" id="import_file" /><br /><br />
-        <input type="submit" id="open_button" name="" value="<? print tr('Open'); ?>" class="button" />
+        <input type="submit" id="open_button" name="" value="<?php print tr('Open'); ?>" class="button" />
       </form>
     </div>
 
     <div id="file_save_dialog" style="display:none">
       <form action="export/" method="post" id="export_form">
         <input type="hidden" name="bbox" value="" id="export_map_bounds" />
-        <? print tr("Choose format"); ?>:<br />
+        <?php print tr("Choose format"); ?>:<br />
         <input type="radio" name="format" value="osm" checked="" id="export_format_osm"> <label for="export_format_osm">OSM (Openstreetmap)</label><br /><br />
         <textarea id="pois_json" name="pois" style="display:none"></textarea>
         <textarea id="areas_json" name="areas" style="display:none"></textarea>
-        <input type="submit" name="" value="<? print tr('Save') ?>" id="save_button" class="button" />
+        <input type="submit" name="" value="<?php print tr('Save') ?>" id="save_button" class="button" />
       </form>
     </div>
 
@@ -96,35 +96,35 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
         <textarea id="print_areas_json" name="areas" style="display:none"></textarea>
         <textarea id="print_pois_json" name="pois" style="display:none"></textarea>
 
-        <? print tr("Map format"); ?>:<br />
+        <?php print tr("Map format"); ?>:<br />
         <input type="radio" name="format" value="pdf" id="export_format_pdf" checked=""> <label for="export_format_pdf">PDF</label><br />
         <!--<input type="radio" name="format" value="svg_mapnik" id="export_format_svg_mapnik"> <label for="export_format_svg_mapnik">SVG</label><br />
         <input type="radio" name="format" value="dyn" checked="" id="print_format_dyn"> <label for="print_format_dyn">Google Maps API</label><br />
         <input type="radio" name="format" value="svg_osmarender" id="print_format_svg_osmarender"> <label for="print_format_svg_osmarender">SVG (Osmarender)</label><br /><br />-->
-        <? print tr("Style"); ?>:<br />
+        <?php print tr("Style"); ?>:<br />
         <select name="style">
-          <? foreach ($cfg['mapnik_styles'] as $style => $title) { ?>
-            <option value="<? print $style; ?>"><? print tr($title); ?></option>
-          <? } ?>
+          <?php foreach ($cfg['mapnik_styles'] as $style => $title) { ?>
+            <option value="<?php print $style; ?>"><?php print tr($title); ?></option>
+          <?php } ?>
         </select><br />
-        <p><? print tr("Printable area"); ?></p>
-        <input type="submit" name="" value="<? print tr('Print'); ?>" id="print_button" class="button" />
+        <p><?php print tr("Printable area"); ?></p>
+        <input type="submit" name="" value="<?php print tr('Print'); ?>" id="print_button" class="button" />
       </form>
     </div>
 
     <div id="help_dialog" style="display:none">
-      <? print tr('help_dialog'); ?>
+      <?php print tr('help_dialog'); ?>
     </div>
 
     <div id="settings_dialog" style="display:none">
       <form action="settings.php" method="post" id="settings_form">
-        <input type="hidden" name="language_old" value="<? print $lang; ?>" />
-        <? print tr("Language"); ?>:
+        <input type="hidden" name="language_old" value="<?php print $lang; ?>" />
+        <?php print tr("Language"); ?>:
         <select name="language_new">
-          <? print $localization->print_language_options(); ?>
+          <?php print $localization->print_language_options(); ?>
         </select><br /><br />
-        <? print tr("setting_changes_note"); ?><br /><br />
-        <input type="submit" name="" value="<? print tr('Save'); ?>" id="save_settings_button" class="button" />
+        <?php print tr("setting_changes_note"); ?><br /><br />
+        <input type="submit" name="" value="<?php print tr('Save'); ?>" id="save_settings_button" class="button" />
       </form>
     </div>
 
