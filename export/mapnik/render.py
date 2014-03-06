@@ -34,6 +34,21 @@ def googleBoundsToBox2d(google_bounds):
     max_lng = float(parts[3].strip(strip_str))
     return (min_lng, min_lat, max_lng, max_lat)
 
+
+class TileSourceParser:
+    """Parses tiles.json containing information about tile sources."""
+    def __init__(self, tile_src_file, tile_source):
+        tile_src_file = os.path.join(sys.path[0], tile_src_file)
+        f = open(tile_src_file, 'r')
+        data = f.read()
+        f.close()
+        obj = json.loads(data)
+        self.tiles = obj[tile_source]
+
+    def get(self, key, default=None):
+        return self.tiles.get(key, default)
+
+
 class StyleParser:
     DEFAULT_STYLE="default"
     UNIT="unit"
@@ -53,6 +68,9 @@ class StyleParser:
 
     def get(self, key, default=None):
         return self.style.get(key, default)
+
+    def set(self, key, value):
+        self.style[key] = value
 
     def get_px(self, key, default=None):
         value = self.get(key, default)
@@ -100,6 +118,7 @@ class Layer(object):
         # for convenience
         self.ctx = renderer.get_context()
         self.m = renderer.get_map()
+        self.tiles = renderer.get_tile_source()
         self.style = renderer.get_style()
 
     def draw(self):
@@ -208,9 +227,7 @@ class CustomMapLayer(Layer):
         self.cache_dir = cache_dir
         self.mercator = GlobalMercator()
         self.tileloader = None
-        if self.style.get('map_tiles') is not None:
-            self.options = self.style.get('map_tiles')
-
+        if self.tiles is not None:
             map_envelope = self.m.envelope()
             # map_envelope is in mercator projection, convert it to
             # long/lat projection
@@ -221,11 +238,12 @@ class CustomMapLayer(Layer):
             max_lat = envelope.maxy
 
             width = self.m.width
-            if self.options['indexing'] == 'google':
+            indexing = self.tiles.get('indexing')
+            if indexing == 'google':
                 self.tileloader = GoogleTileLoader(min_lat, min_lon, max_lat, max_lon, width)
-            elif self.options['indexing'] == 'tms':
+            elif indexing == 'tms':
                 self.tileloader = TMSTileLoader(min_lat, min_lon, max_lat, max_lon, width)
-            elif self.options['indexing'] == 'f':
+            elif indexing == 'f':
                 self.tileloader = FTileLoader(min_lat, min_lon, max_lat, max_lon, width)
 
     def draw(self):
@@ -242,10 +260,9 @@ class CustomMapLayer(Layer):
 
     def _get_tiles(self):
         tiles = list()
-        http_headers = None
-        if self.options.has_key('http_headers'):
-            http_headers = self.options['http_headers']
-        tile_files = self.tileloader.download(self.cache_dir, self.options['url'], http_headers)
+        url = self.tiles.get('url')
+        http_headers = self.tiles.get('http_headers')
+        tile_files = self.tileloader.download(self.cache_dir, url, http_headers)
         for filename in tile_files:
             tile = TileLayer(self.renderer, filename, self.mercator)
             tiles.append(tile)
@@ -288,10 +305,12 @@ class TileLayer(Layer):
 class MapnikRenderer:
 
     STYLES_FILE="styles.json"
+    TILES_FILE="tiles.json"
     COPYRIGHT_TEXT="© OpenStreetMap contributors, CC-BY-SA"
 
     def __init__(self, areas):
         self.areas = areas
+        self.tiles = None
         self.style = None
 
         # Set up projections
@@ -306,8 +325,15 @@ class MapnikRenderer:
         self.lnglat_to_merc_transform = mapnik2.ProjTransform(longlat, self.merc)
         self.merc_to_lnglat_transform = mapnik2.ProjTransform(self.merc, longlat)
 
-    def render(self, style_name, qrcode):
+    def render(self, output_format, tile_source, style_name, qrcode):
+        # parse styles
         self.style = StyleParser(self.STYLES_FILE, style_name)
+
+        # parse tile sources
+        if tile_source is not None and tile_source != 'mapnik':
+            self.tiles = TileSourceParser(self.TILES_FILE, tile_source)
+            # force zoom 0.5 with tiles, seems to be good
+            self.style.set('zoom', 0.5)
 
         try:
             mapfile = os.environ['MAPNIK_MAP_FILE']
@@ -350,9 +376,6 @@ class MapnikRenderer:
         #m.aspect_fix_mode = mapnik.GROW_CANVAS
         # Note: aspect_fix_mode is only available in Mapnik >= 0.6.0
         self.m.zoom_to_box(self.merc_bbox)
-
-        # get output format from styles.json, default is pdf
-        output_format = self.style.get('format', 'pdf')
 
         # we will render the map to cairo surface
         surface = None
@@ -435,6 +458,9 @@ class MapnikRenderer:
         """Transforms given merc Box2d or Coord to map projection."""
         return self.m.view_transform().forward(bbox)
 
+    def get_tile_source(self):
+        return self.tiles
+
     def get_style(self):
         return self.style
 
@@ -456,12 +482,14 @@ class MapnikRenderer:
         return self.output_file
 
     def has_custom_map(self):
-        return self.style.get('map_tiles') is not None
+        return self.tiles is not None
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Mapnik renderer.')
     parser.add_argument('-b', '--bbox', required=True)
+    parser.add_argument('-f', '--outputformat', required=False, default='pdf')
+    parser.add_argument('-t', '--tiles', required=False, default=None)
     parser.add_argument('-s', '--style', required=False, default=None)
     parser.add_argument('-q', '--qrcode', required=False, default=None)
     args = parser.parse_args()
@@ -474,6 +502,6 @@ if __name__ == "__main__":
     pois = data['pois']
 
     r = MapnikRenderer(areas)
-    r.render(args.style, args.qrcode)
+    r.render(args.outputformat, args.tiles, args.style, args.qrcode)
     fn = r.get_output()
     sys.stdout.write("%s" % fn)

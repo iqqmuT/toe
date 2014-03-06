@@ -51,6 +51,9 @@ if (!strcmp("osm", $format)) {
 elseif (!strcmp("pdf", $format)) {
     $export = new MapnikPDFExport($pois, $areas, $qrcode);
 }
+elseif (!strcmp("svg", $format)) {
+    $export = new MapnikSVGExport($pois, $areas, $qrcode);
+}
 
 // download output as file
 if ($export) {
@@ -143,14 +146,7 @@ class OSMExport extends ExportBase {
 }
 
 class MapnikExport extends ExportBase {
-}
-
-class MapnikPDFExport extends MapnikExport {
-    private $mapnik, $output_file;
-
-    function getFiletype() {
-        return "application/pdf";
-    }
+    protected $mapnik, $output_file;
 
     function export() {
         global $cfg;
@@ -209,10 +205,16 @@ class MapnikPDFExport extends MapnikExport {
 
         $cmd = $cfg['mapnik_bin'];
         $bounds = $_POST['bbox'];
-        $cmd .= ' -b "' . $bounds . '"';
+        $cmd .= ' --bbox "' . $bounds . '"';
+
+        if (isset($_POST['format']))
+            $cmd .= ' --outputformat ' . $_POST['format'];
+
+        if (isset($_POST['map-source']))
+            $cmd .= ' --tiles ' . $_POST['map-source'];
 
         if (isset($_POST['style']))
-            $cmd .= ' -s ' . $_POST['style'];
+            $cmd .= ' --style ' . $_POST['style'];
 
         if ($this->qrcode)
             $cmd .= ' --qrcode ' . $this->qrcode;
@@ -224,8 +226,27 @@ class MapnikPDFExport extends MapnikExport {
         return file_get_contents($this->output_file);
     }
 
+}
+
+class MapnikPDFExport extends MapnikExport {
+
+    function getFiletype() {
+        return "application/pdf";
+    }
+
     function genFilename() {
-        return strftime("map_%Y-%m-%d_%H%M%S.pdf"); // 'area_2010-10-28180603.osm'
+        return strftime("map_%Y-%m-%d_%H%M%S.pdf"); // 'area_2010-10-28180603.pdf'
+    }
+}
+
+class MapnikSVGExport extends MapnikExport {
+
+    function getFiletype() {
+        return "image/svg+xml";
+    }
+
+    function genFilename() {
+        return strftime("map_%Y-%m-%d_%H%M%S.svg"); // 'area_2010-10-28180603.svg'
     }
 }
 
