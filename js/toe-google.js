@@ -416,33 +416,31 @@ toe.map.AreaVertexMarker = function(options) {
     options.raiseOnDrag = false;
     options.cursor = 'move';
 
-    this.base = google.maps.Marker;
-    this.base(options);
+    // prototype "inheritance" does not work with Google Maps Marker
+    this.googleMarker = new google.maps.Marker(options);
 };
-
-toe.map.AreaVertexMarker.prototype = new google.maps.Marker;
 
 toe.map.AreaVertexMarker.prototype.remove = function() {
-  this.setMap(null);
+  this.googleMarker.setMap(null);
 };
 toe.map.AreaVertexMarker.prototype.setDrag = function(func) {
-  google.maps.event.addListener(this, 'drag', func);
+  google.maps.event.addListener(this.googleMarker, 'drag', func);
 };
 
 toe.map.AreaVertexMarker.prototype.setDragEnd = function(func) {
-  google.maps.event.addListener(this, 'dragend', func);
+  google.maps.event.addListener(this.googleMarker, 'dragend', func);
 };
 
 toe.map.AreaVertexMarker.prototype.setDoubleClick = function(func) {
-  google.maps.event.addListener(this, 'dblclick', func);
+  google.maps.event.addListener(this.googleMarker, 'dblclick', func);
 };
 
 toe.map.AreaVertexMarker.prototype.getToeLatLng = function() {
-  return toe.map._toLatLng(this.getPosition());
+  return toe.map._toLatLng(this.googleMarker.getPosition());
 };
 
 toe.map.AreaVertexMarker.prototype.setToeLatLng = function(latLng) {
-  this.setPosition(latLng);
+  this.googleMarker.setPosition(latLng);
 };
 
 /**

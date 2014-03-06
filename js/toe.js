@@ -129,12 +129,12 @@ var toe = {
   },
 
   _openArchive: function(id) {
-    console.log('open archive id', id);
+    //console.log('open archive id', id);
     var self = this;
     $.getJSON('archive/', {
       id:     id
     }).success(function(data) {
-      console.log('archive opened', data);
+      //console.log('archive opened', data);
       toe.importData({ areas: data });
       toe.setReadonly(true);
     });
@@ -159,11 +159,11 @@ var toe = {
 };
 
 toe.importData = function(data) {
-  console.log("we are importing now!", data);
+  //console.log("we are importing now!", data);
   var areas_imported = toe.AreaManager.importJSON(data.areas);
   //var pois_imported = toe.PoiManager.importJSON(data.pois);
   var pois_imported;
-  console.log("areas imported: ", areas_imported);
+  //console.log("areas imported: ", areas_imported);
   //console.log("POIs imported: " + pois_imported);
   if (pois_imported || areas_imported) {
     toe.dialog.OpenFile.close(); // we can close the dialog now
@@ -388,7 +388,7 @@ toe.control = {
     };
 
     this.toggle_visible = function() {
-      console.log("AreaControl.toggle_visible()");
+      //console.log("AreaControl.toggle_visible()");
       if (this.visible) {
         this.visible = false;
         $visible_ui.css(css_invisible);
@@ -401,7 +401,7 @@ toe.control = {
     };
 
     this.toggle_editable = function() {
-      console.log("AreaControl.toggle_editable()");
+      //console.log("AreaControl.toggle_editable()");
       if (this.editable) {
           this.editable = false;
           $ui.css(css_readonly);
@@ -475,7 +475,7 @@ toe.control = {
     };
 
     this.toggle_visible = function() {
-      console.log("PoiControl.toggle_visible()");
+      //console.log("PoiControl.toggle_visible()");
       if (this.visible) {
         this.visible = false;
         $visible_ui.css(css_invisible);
@@ -488,7 +488,7 @@ toe.control = {
     };
 
     this.toggle_editable = function() {
-      console.log("PoiControl.toggle_editable()");
+      //console.log("PoiControl.toggle_editable()");
       if (this.editable) {
         this.editable = false;
         $ui.css(css_readonly);
@@ -627,7 +627,7 @@ toe.dialog = {
           $("#print_archive_id").val(id);
           var archive_url = document.URL.split('?')[0];
           archive_url += '?a=' + id;
-          console.log('archive url:', archive_url);
+          //console.log('archive url:', archive_url);
           $("#print_archive_url").val(archive_url);
           $('#print_form').trigger('submit', true);
         });
@@ -676,7 +676,7 @@ toe.dialog = {
 
     // in export form submit, send values as JSON to server
     var exportFile = function() {
-      console.log("exporting...");
+      //console.log("exporting...");
       //$("#pois_json").val(pois.toJSON());
       $("#areas_json").val(toe.AreaManager.toJSON());
       $("#pois_json").val('[]');
@@ -722,11 +722,11 @@ toe.dialog = {
 
     var saveSettings = function() {
       // save settings from the dialog
-      console.log("save settings");
+      //console.log("save settings");
       // save settings to cookie with ajax, get response as json
       var settings = $("#settings_form").serialize();
       $.get('settings.php?', settings, function(data) {
-        console.log('response: ', data);
+        //console.log('response: ', data);
         if (data.changed) {
           if (data.redirect_url) {
             // setting changes require reload!
@@ -1002,8 +1002,7 @@ toe.AreaManager = new function() {
   };
 
   this.mapClicked = function(event) {
-    console.log("AREAS:MAPCLICKED", event);
-
+    //console.log("AREAS:MAPCLICKED", event);
     if (click_timeout) {
       clearTimeout(click_timeout);
     }
@@ -1013,16 +1012,16 @@ toe.AreaManager = new function() {
   };
 
   this.mapDoubleClicked = function(event) {
-    console.log("AREAS:MAP DBL CLICKED", event);
+    //console.log("AREAS:MAP DBL CLICKED", event);
     clearTimeout(click_timeout);
     if (self.active_area) {
       // add new vertex to active area
-      console.log("ADD TO AREA ", self.active_area);
+      //console.log("ADD TO AREA ", self.active_area);
       var latLng = toe.map.getEventLatLng(event);
       toe.command.run(new toe.command.AddVertex(self.active_area, latLng));
     } else {
       // create a new area
-      console.log("CREATE NEW AREA!", toe.map.getEventLatLng(event));
+      //console.log("CREATE NEW AREA!", toe.map.getEventLatLng(event));
       var latLng = toe.map.getEventLatLng(event);
       var ret = toe.command.run(new toe.command.CreateArea(latLng));
       if (ret.success) {
@@ -1033,7 +1032,7 @@ toe.AreaManager = new function() {
 
   this.add = function(area) {
     if (this.findById(area.id)) {
-      console.log("id " + area.id + " is reserved, generating a new id for area");
+      //console.log("id " + area.id + " is reserved, generating a new id for area");
       area.id = this.getNewId();
     }
     this.areas.push(area);
@@ -1099,8 +1098,7 @@ toe.AreaManager = new function() {
       area.changed = true;
       toe.map.infoWindow.hide();
     }
-    console.log("area_id: " + id);
-    console.log(event);
+    //console.log("area_id: " + id);
     event.stopPropagation();
     this.changed = true;
     return false;
@@ -1130,7 +1128,7 @@ toe.AreaManager = new function() {
       areas = [ toe.AreaManager.active_area ];
     }
     var json = toe.util.arrayToJSON(areas);
-    console.log("export areas: ", json);
+    //console.log("export areas: ", json);
     return json;
   };
 
@@ -1213,7 +1211,7 @@ toe.VertexManager = new function() {
 
   this.add = function(latLng, area) {
     // see if this is already exists in vertices array
-    console.log("VertexManager.add(", latLng, area, ")");
+    //console.log("VertexManager.add(", latLng, area, ")");
     var vertices_arr = this.find(latLng);
     var vertex;
     if (!vertices_arr.length) {
@@ -1233,7 +1231,7 @@ toe.VertexManager = new function() {
   // else remove whole vertex (remove vertices that don't belong
   // to any area anyway)
   this.removeByLatLng = function(latLng, area) {
-    console.log("VertexManager.remove(", latLng, area, ")");
+    //console.log("VertexManager.remove(", latLng, area, ")");
     var vertices_arr = this.find(latLng);
     for (var i = 0; i < vertices_arr.length; i++) {
       this.remove(vertices_arr[i], area);
@@ -1246,10 +1244,10 @@ toe.VertexManager = new function() {
    * it can be removed.
    */
   this.remove = function(vertex, area) {
-    console.log("VertexManager.remove(", vertex, area, ")");
+    //console.log("VertexManager.remove(", vertex, area, ")");
     vertex.unlink(area);
     if (vertex.empty()) {
-      console.log("vertex is EMPTY!");
+      //console.log("vertex is EMPTY!");
       // we no longer need this vertex, last link to area was gone
       for (var i = 0; i < this.vertices.length; i++) {
         if (this.vertices[i] == vertex) {
@@ -1286,6 +1284,7 @@ toe.Vertex.prototype.move = function(latLng, area) {
   this.latLng = latLng; //  update our information at last
   if (this.marker) {
     // move marker too
+    //console.log('Vertex.move() MOVING MARKER TOO', this.latLng);
     this.marker.setToeLatLng(this.latLng);
   }
 };
@@ -1307,7 +1306,7 @@ toe.Vertex.prototype.linkTo = function(area) {
 // if area is not given, remove this vertex from all areas
 // it is assigned to
 toe.Vertex.prototype.unlink = function(area) {
-  console.log("vertex.remove(", area, ")");
+  //console.log("vertex.remove(", area, ")");
   var newAreas = [];
   for (var i = 0; i < this.areas.length; i++) {
     if (!area || (area && this.areas[i] == area)) {
@@ -1342,8 +1341,7 @@ toe.Vertex.prototype.empty = function() {
 };
 
 toe.Vertex.prototype.findNearVertex = function(latLng, range) {
-  //var point = overlay.getProjection().fromLatLngToContainerPixel(this.latLng);
-  console.log("find near", latLng);
+  //console.log("find near", latLng);
   var point = latLng.toPoint();
   for (var i = 0; i < toe.VertexManager.vertices.length; i++) {
     var vertex = toe.VertexManager.vertices[i];
@@ -1362,7 +1360,7 @@ toe.Vertex.prototype.findNearVertex = function(latLng, range) {
  * Removes given vertex.
  */
 toe.Vertex.prototype.merge = function(vertex) {
-  console.log('Vertex.merge()', vertex.areas, '->', this.areas);
+  //console.log('Vertex.merge()', vertex.areas, '->', this.areas);
   // merge areas
   $.merge(this.areas, vertex.areas);
   vertex.areas = [];
@@ -1375,7 +1373,7 @@ toe.Vertex.prototype.merge = function(vertex) {
  * vertex object. Returns new vertex.
  */
 toe.Vertex.prototype.split = function(areas) {
-  console.log('Vertex.split', areas);
+  //console.log('Vertex.split', areas);
   var newVertex = new toe.Vertex(this.latLng);
   newVertex.areas = toe.util.arrayDifference(this.areas, areas);
   // make a copy of areas
@@ -1411,7 +1409,7 @@ toe.Vertex.prototype.showMarker = function() {
 
   var self = this;
   this.marker.setDragEnd(function(event) {
-    var latLng = this.getToeLatLng();
+    var latLng = self.marker.getToeLatLng();
     var merged = false;
     if (toe.options.snap_vertices > 0) {
       // snap to another vertex within some range
@@ -1505,7 +1503,7 @@ toe.Area.prototype.show = function() { this.polygon.show(); };
 toe.Area.prototype.hide = function() { this.polygon.hide(); };
 
 toe.Area.prototype.clicked = function(event) {
-  console.log("area " + this.name + " clicked.", event);
+  //console.log("area " + this.name + " clicked.", event);
   if (toe.control.Mode.selected == toe.control.Mode.AREA) {
     var self = this;
     this.click_timeout = setTimeout(function() {
@@ -1518,14 +1516,14 @@ toe.Area.prototype.clicked = function(event) {
   }
   else if (toe.control.Poi.editable) {
     if (shift_is_down) {
-      console.log("CREATE NEW POI");
+      //console.log("CREATE NEW POI");
       pois.create(event.latLng);
     }
   }
 };
 
 toe.Area.prototype.doubleClicked = function(event) {
-  console.log("area " + this.name + " clicked.", event);
+  //console.log("area " + this.name + " clicked.", event);
   clearTimeout(this.click_timeout);
   if (toe.control.Mode.selected == toe.control.Mode.AREA) {
     if (toe.AreaManager.active_area) {
@@ -1536,7 +1534,7 @@ toe.Area.prototype.doubleClicked = function(event) {
 };
 
 toe.Area.prototype.activate = function() {
-  console.log("area.activate");
+  //console.log("area.activate");
   // deactivate the previous active
   toe.AreaManager.deactivate();
   this.edit_mode = true;
@@ -1560,6 +1558,7 @@ toe.Area.prototype.refreshMarkers = function() {
  */
 toe.Area.prototype._showMarkers = function() {
   var vertices = this.getVertices();
+  //console.log('Area._showMarkers');
   for (var i = 0; i < vertices.length; i++) {
     vertices[i].showMarker();
   }
@@ -1576,7 +1575,7 @@ toe.Area.prototype._removeMarkers = function() {
 };
 
 toe.Area.prototype.deactivate = function() {
-  console.log("area.deactivate");
+  //console.log("area.deactivate");
   this.edit_mode = false;
   toe.AreaManager.active_area = null;
 
@@ -1599,7 +1598,7 @@ toe.Area.prototype.setReadonly = function(readonly) {
 
 // adds a new vertex for area
 toe.Area.prototype.addVertex = function(latLng) {
-  console.log("add new vertex: ", this.name, latLng);
+  //console.log("add new vertex: ", this.name, latLng);
 
   var path = this.polygon.getToePath();
   for (var i = 0; i < path.length; i++) {
@@ -1680,7 +1679,7 @@ toe.Area.prototype.showInfoWindow = function() {
         return false;
       });
       $('#area_print').off('click').on('click', function(event) {
-        console.log("print this?");
+        //console.log("print this?");
       });
       $('#area_delete').off('click').on('click', function(event) {
         toe.command.run(new toe.command.RemoveArea(self));
