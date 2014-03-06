@@ -18,6 +18,10 @@ TOE uses following JavaScript libraries:
  * SQLite3
  * GD library for PHP QR Code support
 
+## Python libraries required for export PDF:
+ * python-mapnik2
+ * python-urllib3
+
 ## Installing
 
 Copy config.php.template to config.php and edit it.
@@ -25,7 +29,8 @@ Do the same in export directory.
 
 ## Installing OpenStreetMaps data for exporting maps
 
-Install Postgresql with PostGIS: `sudo apt-get install postgresql-9.1-postgis`
+Install Postgresql with PostGIS:
+`sudo apt-get install postgresql-9.1-postgis postgresql-contrib`
 
 Setup database by following instructions here:
 http://wiki.openstreetmap.org/wiki/Mapnik/PostGIS
