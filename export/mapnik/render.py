@@ -405,8 +405,11 @@ class MapnikRenderer:
         layers.append(AreaLayer(self, self.areas))
 
         # copyright layer
-        if not self.has_custom_map():
-            layers.append(CopyrightLayer(self, self.COPYRIGHT_TEXT))
+        copyright_text = self.COPYRIGHT_TEXT
+        if self.has_custom_map():
+            copyright_text = self.tiles.get('copyright', None)
+        if copyright_text is not None:
+            layers.append(CopyrightLayer(self, copyright_text))
 
         # QR code layer
         if qrcode and self.style.get('qrcode', True):
