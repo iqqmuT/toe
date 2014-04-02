@@ -35,7 +35,7 @@ toe.map = {
       mapTypeId: 'OSM',
       mapTypeControlOptions: {
         mapTypeIds: [ 'OSM', google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID,
-          google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.TERRAIN, 'EEQ' ],
+          google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.TERRAIN, 'Fonecta', 'EEQ' ],
         //style: google.maps.MapTypeControlStyle.DEFAULT
         style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
       },
@@ -49,7 +49,7 @@ toe.map = {
       this.map.fitBounds(lastView);
     }
 
-    // set OpenStreetMap map type as default  
+    // set OpenStreetMap map type as default
     var osm_map_type = new google.maps.ImageMapType({
       getTileUrl: function(coord, zoom) {
         return "http://tile.openstreetmap.org/" +
@@ -63,6 +63,24 @@ toe.map = {
     });
     this.map.mapTypes.set('OSM', osm_map_type);
 
+    // Finland maps from Fonecta.fi
+    var fonecta_map_type = new google.maps.ImageMapType({
+      getTileUrl: function(coord, zoom) {
+        var x = coord.x - Math.pow(2, zoom - 1);
+        var ymax = 1 << zoom;
+        var y = ymax - coord.y - 1;
+        y = y - Math.pow(2, zoom - 1);
+        zoom = 18 - zoom;
+        return "http://kartta.fonecta.fi/oym?f=m&ft=png_std_256&key=undefined&x=" + x + "&y=" + y + "&z=" + zoom;
+      },
+      tileSize: new google.maps.Size(256, 256),
+      isPng: true,
+      alt: "Fonecta Kartat (Finland)",
+      name: "Fonecta.fi",
+      maxZoom: 16
+    });
+    this.map.mapTypes.set('Fonecta', fonecta_map_type);
+
     // Ecuador, Quito maps from EEQ
     var eeq_map_type = new google.maps.ImageMapType({
       getTileUrl: function(coord, zoom) {
@@ -73,7 +91,7 @@ toe.map = {
       },
       tileSize: new google.maps.Size(256, 256),
       isPng: true,
-      alt: "Empresa Eléctrica Quito",
+      alt: "Empresa Eléctrica Quito (Quito, Ecuador)",
       name: "EEQ",
       maxZoom: 18
     });
