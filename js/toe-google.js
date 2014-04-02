@@ -84,7 +84,7 @@ toe.map = {
       maxZoom: 16
     });
     this.map.mapTypes.set('Fonecta', fonecta_map_type);
-    copyrights['Fonecta'] = '&copy; Fonecta, Karttakeskus, Liikennevirasto, Maanmittauslaitos, OpenStreetMap contributors, OnYourMap.com <a href="http://www.fonecta.fi/kartat"><img src="http://dc9x1r9mdtc9e.cloudfront.net/fofi-web/assets/e9922e4/pics/logo_fonecta_kartat_footer.png" alt="Fonecta.fi" style="border: 0;opacity: 0.8"></a>';
+    copyrights['Fonecta'] = '&copy; Fonecta, Karttakeskus, Liikennevirasto, Maanmittauslaitos, OpenStreetMap contributors, OnYourMap.com <a href="http://www.fonecta.fi/kartat"><img src="http://dc9x1r9mdtc9e.cloudfront.net/fofi-web/assets/e9922e4/pics/logo_fonecta_kartat_footer.png" alt="Fonecta.fi" style="border: 0;opacity: 0.8;margin-bottom: -5px;"></a>';
 
     // Ecuador, Quito maps from EEQ
     var eeq_map_type = new google.maps.ImageMapType({
