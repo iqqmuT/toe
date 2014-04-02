@@ -563,6 +563,23 @@ toe.control = {
       });
       return $div;
     };
+  },
+
+  // map copyright text
+  Copyright: new function() {
+    var self = this;
+
+    this.html = function(text) {
+      var $div = $('<div id="map-copyright"></div>');
+      $div.css({
+        'font-size': '11px',
+        'font-family': 'Arial, sans-serif',
+        'margin': '0 2px 2px 0',
+        'white-space': 'nowrap'
+      });
+      $div.html(text);
+      return $div;
+    };
   }
 };
 

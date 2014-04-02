@@ -49,6 +49,9 @@ toe.map = {
       this.map.fitBounds(lastView);
     }
 
+    // copyright texts for different map types
+    var copyrights = {};
+
     // set OpenStreetMap map type as default
     var osm_map_type = new google.maps.ImageMapType({
       getTileUrl: function(coord, zoom) {
@@ -62,6 +65,7 @@ toe.map = {
       maxZoom: 19
     });
     this.map.mapTypes.set('OSM', osm_map_type);
+    copyrights['OSM'] = '&copy; <a href="http://osm.org/copyright">OpenStreetMap contributors</a>';
 
     // Finland maps from Fonecta.fi
     var fonecta_map_type = new google.maps.ImageMapType({
@@ -80,6 +84,7 @@ toe.map = {
       maxZoom: 16
     });
     this.map.mapTypes.set('Fonecta', fonecta_map_type);
+    copyrights['Fonecta'] = '&copy; Fonecta, Karttakeskus, Liikennevirasto, Maanmittauslaitos, OpenStreetMap contributors, OnYourMap.com <a href="http://www.fonecta.fi/kartat"><img src="http://dc9x1r9mdtc9e.cloudfront.net/fofi-web/assets/e9922e4/pics/logo_fonecta_kartat_footer.png" alt="Fonecta.fi" style="border: 0;opacity: 0.8"></a>';
 
     // Ecuador, Quito maps from EEQ
     var eeq_map_type = new google.maps.ImageMapType({
@@ -105,9 +110,18 @@ toe.map = {
     var $tools_div = toe.control.Tools.html();
     this.map.controls[google.maps.ControlPosition.RIGHT].push($tools_div[0]);
 
+    var copyright = copyrights[toe.map.map.getMapTypeId()] || '';
+    var $copyright_div = toe.control.Copyright.html(copyright);
+    this.map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push($copyright_div[0]);
+
     // add click listeners to the map
     google.maps.event.addListener(this.map, 'click', function(event) { toe.handler.mapClicked(event); });
     google.maps.event.addListener(this.map, 'dblclick', function(event) { toe.handler.mapDoubleClicked(event); });
+    // change copyright text when map type is changed
+    google.maps.event.addListener(this.map, 'maptypeid_changed', function() {
+      var html = copyrights[toe.map.map.getMapTypeId()] || '';
+      $('#map-copyright').html(html);
+    });
 
     // dummy overlay, we will use this for converting 
     this.overlay = new google.maps.OverlayView();
