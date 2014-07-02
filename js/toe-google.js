@@ -91,7 +91,7 @@ toe.map = {
       getTileUrl: function(coord, zoom) {
         var ymax = 1 << zoom;
         var y = ymax - coord.y - 1;
-        return "http://tumppi.com/eeq/" +
+        return "http://tile.toe.fi/eeq/" +
         zoom + "/" + coord.x + "/" + y + ".png";
       },
       tileSize: new google.maps.Size(256, 256),
