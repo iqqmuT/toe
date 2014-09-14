@@ -30,9 +30,9 @@ toe.map = {
       zoom: 4
     };
     this.map = new L.Map('map_canvas', mapOptions);
-    L.tileLayer('http://{s}.tile.cloudmade.com/f32e8bf95a994abf9d647adc983a33a5/997/256/{z}/{x}/{y}.png', {
-      attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
-      maxZoom: 18
+      L.tileLayer('http://{s}.tiles.mapbox.com/v3/iqqmut.jgii6ia2/{z}/{x}/{y}.png', {
+      attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    maxZoom: 18
     }).addTo(this.map);
     var lastView = toe._loadBounds();
     if (lastView !== false) {
