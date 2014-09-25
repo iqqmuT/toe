@@ -330,7 +330,7 @@ class MapnikRenderer:
         self.style = StyleParser(self.STYLES_FILE, style_name)
 
         # parse tile sources
-        if tile_source is not None and tile_source != 'mapnik':
+        if tile_source is not None and tile_source != 'OSM':
             self.tiles = TileSourceParser(self.TILES_FILE, tile_source)
             # force zoom 0.5 with tiles, seems to be good
             self.style.set('zoom', 0.5)
@@ -408,8 +408,9 @@ class MapnikRenderer:
         copyright_text = self.COPYRIGHT_TEXT
         if self.has_custom_map():
             copyright_text = self.tiles.get('copyright', None)
-        if copyright_text is not None:
-            layers.append(CopyrightLayer(self, copyright_text))
+            if copyright_text is not None:
+                copyright_text = copyright_text['export']
+                layers.append(CopyrightLayer(self, copyright_text))
 
         # QR code layer
         if qrcode and self.style.get('qrcode', True):
