@@ -106,11 +106,9 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
                 <select name="map-source">
                   <?php
                   $sources = json_decode($cfg['tile_sources_json'], true);
-                  foreach ($sources as $name => $source):
+                  foreach ($sources as $key => $source):
                   ?>
-                    <option value="<?php print $name; ?>">
-                      <?php print $source['name']; ?>
-                    </option>
+                    <option value="<?php print $key; ?>"><?php print $source['name']; ?></option>
                   <?php endforeach; ?>
                 </select>
               </td>
@@ -128,8 +126,11 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
               <td><?php print tr("Style"); ?>:</td>
               <td>
                 <select name="style">
-                  <?php foreach ($cfg['mapnik_styles'] as $style => $title): ?>
-                    <option value="<?php print $style; ?>"><?php print tr($title); ?></option>
+                  <?php
+                  $styles = json_decode($cfg['export_styles_json'], true);
+                  foreach ($styles as $key => $style):
+                  ?>
+                    <option value="<?php print $key; ?>"><?php print $style['name']; ?></option>
                   <?php endforeach; ?>
                 </select>
               </td>
