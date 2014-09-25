@@ -11,14 +11,8 @@ $JS_MAP_LEAFLET     = 'leaflet';
 
 $cfg['js_map_library'] = $JS_MAP_GOOGLE;
 
-// supported mapnik map tiles when printing (export/mapnik/tiles.json)
-$cfg['mapnik_tiles'] = array(
-  // 'example-with-f-indexing' => 'Tiles with F indexing',
-  // 'example-with-tms-indexing' => 'Tiles with TMS indexing'
-);
-
-// tile sources
-$cfg['tile_sources'] = file_get_contents('export/mapnik/tiles.json');
+// tile sources as JSON
+$cfg['tile_sources_json'] = file_get_contents('export/mapnik/tiles.json');
 
 // supported mapnik styles when printing (export/mapnik/styles.json)
 $cfg['mapnik_styles'] = array(

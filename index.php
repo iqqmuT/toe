@@ -50,8 +50,7 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
     <script type="text/javascript" src="js/toe.js?v=1.0"></script>
     <script type="text/javascript" src="js/toe-<?php print $maplib; ?>.js?v=1.0"></script>
     <script type="text/javascript">
-      // tile sources
-      var tileSources = <?php print $cfg['tile_sources']; ?>;
+      var tileSources = <?php print $cfg['tile_sources_json']; ?>;
       // set localization
       var translations = <?php print $localization->read_lang_file($lang); ?>;
       setLanguage('<?php print $lang; ?>', translations);
@@ -105,9 +104,13 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
               <td><?php print tr("Map"); ?>:</td>
               <td>
                 <select name="map-source">
-                  <option value="mapnik">OSM</option>
-                  <?php foreach ($cfg['mapnik_tiles'] as $tiles => $title): ?>
-                    <option value="<?php print $tiles; ?>"><?php print tr($title); ?></option>
+                  <?php
+                  $sources = json_decode($cfg['tile_sources_json'], true);
+                  foreach ($sources as $name => $source):
+                  ?>
+                    <option value="<?php print $name; ?>">
+                      <?php print $source['name']; ?>
+                    </option>
                   <?php endforeach; ?>
                 </select>
               </td>
