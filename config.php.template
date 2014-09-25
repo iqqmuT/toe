@@ -17,6 +17,9 @@ $cfg['mapnik_tiles'] = array(
   // 'example-with-tms-indexing' => 'Tiles with TMS indexing'
 );
 
+// tile sources
+$cfg['tile_sources'] = file_get_contents('export/mapnik/tiles.json');
+
 // supported mapnik styles when printing (export/mapnik/styles.json)
 $cfg['mapnik_styles'] = array(
     '144x93' => '144 x 93 mm',

@@ -50,13 +50,16 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
     <script type="text/javascript" src="js/toe.js?v=1.0"></script>
     <script type="text/javascript" src="js/toe-<?php print $maplib; ?>.js?v=1.0"></script>
     <script type="text/javascript">
+      // tile sources
+      var tileSources = <?php print $cfg['tile_sources']; ?>;
       // set localization
       var translations = <?php print $localization->read_lang_file($lang); ?>;
       setLanguage('<?php print $lang; ?>', translations);
       // initialize
       $(document).ready(function() {
         toe.init({
-          archive: <?php print $archive_id; ?>
+          archive: <?php print $archive_id; ?>,
+          tileSources: tileSources,
         });
       });
     </script>

@@ -29,14 +29,26 @@ toe.map = {
       center = lastView.getCenter();
     }
 
+    // Available maps
+    var defaultMap = 'OSM';
+    var mapTypeIds = [
+      defaultMap,
+      google.maps.MapTypeId.ROADMAP,
+      google.maps.MapTypeId.HYBRID,
+      google.maps.MapTypeId.SATELLITE,
+      google.maps.MapTypeId.TERRAIN
+    ];
+    for (var name in toe.options.tileSources) {
+      if (name === defaultMap)
+        continue; // already in list
+      mapTypeIds.push(name);
+    }
     var mapOptions = {
       zoom: 4,
       center: center,
-      mapTypeId: 'OSM',
+      mapTypeId: defaultMap,
       mapTypeControlOptions: {
-        mapTypeIds: [ 'OSM', google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID,
-          google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.TERRAIN, 'Fonecta', 'EEQ' ],
-        //style: google.maps.MapTypeControlStyle.DEFAULT
+        mapTypeIds: mapTypeIds,
         style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
       },
       disableDefaultUI: false,
@@ -52,57 +64,31 @@ toe.map = {
     // copyright texts for different map types
     var copyrights = {};
 
-    // set OpenStreetMap map type as default
-    var osm_map_type = new google.maps.ImageMapType({
-      getTileUrl: function(coord, zoom) {
-        return "http://tile.openstreetmap.org/" +
-        zoom + "/" + coord.x + "/" + coord.y + ".png";
-      },
-      tileSize: new google.maps.Size(256, 256),
-      isPng: true,
-      alt: "OpenStreetMap layer",
-      name: "OSM",
-      maxZoom: 19
-    });
-    this.map.mapTypes.set('OSM', osm_map_type);
-    copyrights['OSM'] = '&copy; <a href="http://osm.org/copyright">OpenStreetMap contributors</a>';
-
-    // Finland maps from Fonecta.fi
-    var fonecta_map_type = new google.maps.ImageMapType({
-      getTileUrl: function(coord, zoom) {
-        var x = coord.x - Math.pow(2, zoom - 1);
-        var ymax = 1 << zoom;
-        var y = ymax - coord.y - 1;
-        y = y - Math.pow(2, zoom - 1);
-        zoom = 18 - zoom;
-        return "http://kartta.fonecta.fi/oym?f=m&ft=png_std_256&key=undefined&x=" + x + "&y=" + y + "&z=" + zoom;
-      },
-      tileSize: new google.maps.Size(256, 256),
-      isPng: true,
-      alt: "Fonecta Kartat (Finland)",
-      name: "Fonecta.fi",
-      maxZoom: 16
-    });
-    this.map.mapTypes.set('Fonecta', fonecta_map_type);
-    copyrights['Fonecta'] = '&copy; Fonecta, Karttakeskus, Liikennevirasto, Maanmittauslaitos, OpenStreetMap contributors, OnYourMap.com <a href="http://www.fonecta.fi/kartat"><img src="http://dc9x1r9mdtc9e.cloudfront.net/fofi-web/assets/e9922e4/pics/logo_fonecta_kartat_footer.png" alt="Fonecta.fi" style="border: 0;opacity: 0.8;margin-bottom: -5px;"></a>';
-
-    // Ecuador, Quito maps from EEQ
-    var eeq_map_type = new google.maps.ImageMapType({
-      getTileUrl: function(coord, zoom) {
-        var ymax = 1 << zoom;
-        var y = ymax - coord.y - 1;
-        return "http://tile.toe.fi/eeq/" +
-        zoom + "/" + coord.x + "/" + y + ".png";
-      },
-      tileSize: new google.maps.Size(256, 256),
-      isPng: true,
-      alt: "Empresa Eléctrica Quito (Quito, Ecuador)",
-      name: "EEQ",
-      maxZoom: 18
-    });
-    this.map.mapTypes.set('EEQ', eeq_map_type);
-
-    this.map.setMapTypeId('OSM');
+    var getUrlFunc = function(tileSource) {
+      return function(coord, zoom) {
+        // convert tile indexing
+        var converted = toe.map.tileIndexing[tileSource.indexing](coord.x, coord.y, zoom);
+        var url = tileSource.url;
+        url = url.replace('{x}', converted.x);
+        url = url.replace('{y}', converted.y);
+        url = url.replace('{z}', converted.z);
+        return url;
+      };
+    };
+    for (var name in toe.options.tileSources) {
+      var tileSource = toe.options.tileSources[name];
+      var getTileUrl = getUrlFunc(tileSource);
+      var mapType = new google.maps.ImageMapType({
+        getTileUrl: getTileUrl,
+        tileSize: new google.maps.Size(256, 256),
+        isPng: true,
+        alt: tileSource.name,
+        name: name,
+        maxZoom: tileSource.maxZoom,
+      });
+      this.map.mapTypes.set(name, mapType);
+      copyrights[name] = tileSource.copyright.ui;
+    }
 
     var $mode_div = toe.control.Mode.html();
     this.map.controls[google.maps.ControlPosition.TOP_CENTER].push($mode_div[0]);
@@ -198,6 +184,40 @@ toe.map = {
     }
     return latLngs;
   }
+
+};
+
+/**
+ * Tile indexing converters.
+ */
+toe.map.tileIndexing = {
+  /**
+   * Tile indexing: 'f'
+   */
+  f: function(x, y, z) {
+    x = x - Math.pow(2, z - 1);
+    var ymax = 1 << z;
+    y = ymax - y - 1;
+    y = y - Math.pow(2, z - 1);
+    z = 18 - z;
+    return { x: x, y: y, z: z };
+  },
+
+  /**
+   * Tile indexing: 'tms'
+   */
+  tms: function(x, y, z) {
+    var ymax = 1 << z;
+    y = ymax - y - 1;
+    return { x: x, y: y, z: z };
+  },
+
+  /**
+   * Tile indexing: 'google'
+   */
+  google: function(x, y, z) {
+    return { x: x, y: y, z: z };
+  },
 };
 
 /**

@@ -44,7 +44,8 @@ var toe = {
     cookie_expire_days: 30,    // cookie expire in days
     archive: null,             // open archive in read only mode
     readonly: false,
-    geolocation_interval: 3000 // interval for getting current position
+    geolocation_interval: 3000,// interval for getting current position
+    tileSources: {},           // tile sources
   },
 
   init: function(options) {
