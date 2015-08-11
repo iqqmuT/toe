@@ -528,3 +528,17 @@ toe.map.CurrentPositionMarker.prototype.setToeLatLng = function(latLng) {
 toe.map.CurrentPositionMarker.prototype.setToeRadius = function(radius) {
   this.setRadius(radius);
 };
+
+/**
+ * Encoded path
+ * https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+ */
+toe.map.encoding = {};
+toe.map.encoding.encodePath = function(path) {
+  return google.maps.geometry.encoding.encodePath(path);
+};
+
+toe.map.encoding.decodePath = function(path) {
+  console.log(google.maps);
+  return google.maps.geometry.encoding.decodePath(path);
+};

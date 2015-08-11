@@ -43,6 +43,7 @@ var toe = {
     cookie_name: 'toe',        // cookie name
     cookie_expire_days: 30,    // cookie expire in days
     archive: null,             // open archive in read only mode
+    encodedPath: null,         // decode and show encoded path
     readonly: false,
     geolocation_interval: 3000,// interval for getting current position
     tileSources: {},           // tile sources
@@ -68,6 +69,9 @@ var toe = {
 
     if (options.archive)
       this._openArchive(options.archive);
+
+    if (options.encodedPath)
+      this._showEncodedPath(options.encodedPath);
 
     if (this.options.geolocation_interval)
       toe.CurrentPositionTracker.start();
@@ -127,6 +131,18 @@ var toe = {
     cookieTxt += ';expires=' + expireDate.toGMTString();
     //console.log("cookie:", cookieTxt);
     document.cookie = cookieTxt;
+  },
+
+  // create new area
+  _showEncodedPath: function(encodedPath) {
+    var path = toe.map.encoding.decodePath(encodedPath);
+    if (path) {
+      var area = new toe.Area(null, '', '', path);
+      toe.AreaManager.add(area);
+      toe.AreaManager.show();
+      toe.map.fitBounds();
+      toe.setReadonly(true);
+    }
   },
 
   _openArchive: function(id) {
