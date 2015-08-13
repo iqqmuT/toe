@@ -656,15 +656,25 @@ toe.dialog = {
         return true;
       }
       else {
-        // archive first
-        toe.AreaManager.archive().success(function(id) {
-          $("#print_archive_id").val(id);
+        if (false && toe.AreaManager.areas.length === 1) {
+          var encodedPath = toe.AreaManager.areas[0].encodePath();
+          encodedPath = encodedPath.replace(/&/g, '%26'); // URL encode
           var archive_url = document.URL.split('?')[0];
-          archive_url += '?a=' + id;
-          //console.log('archive url:', archive_url);
+          archive_url += '?p=' + encodedPath;
           $("#print_archive_url").val(archive_url);
           $('#print_form').trigger('submit', true);
-        });
+        }
+        else {
+          // archive first
+          toe.AreaManager.archive().success(function(id) {
+            $("#print_archive_id").val(id);
+            var archive_url = document.URL.split('?')[0];
+            archive_url += '?a=' + id;
+            //console.log('archive url:', archive_url);
+            $("#print_archive_url").val(archive_url);
+            $('#print_form').trigger('submit', true);
+          });
+        }
         return false;
       }
     };
@@ -1767,6 +1777,13 @@ toe.Area.prototype.isArea = function() {
  */
 toe.Area.prototype.isActive = function() {
   return (toe.AreaManager.active_area == this);
+};
+
+/**
+ * Encodes path
+ */
+toe.Area.prototype.encodePath = function() {
+  return toe.map.encoding.encodePath(this.polygon.getToePath());
 };
 
 // ------------------------------------------------------------
