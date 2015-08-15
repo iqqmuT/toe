@@ -23,7 +23,6 @@
 
 include("lib/common.php");
 $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
-$encoded_path = (isset($_GET['p'])) ? "'" . $_GET['p'] . "'" : false;
 ?>
 <html lang="<?php print $lang; ?>">
   <head>
@@ -36,7 +35,7 @@ $encoded_path = (isset($_GET['p'])) ? "'" . $_GET['p'] . "'" : false;
     <link type="text/css" href="css/toe.css?v=1.0" rel="stylesheet" />
     <?php if ($maplib == $JS_MAP_GOOGLE): ?>
       <script type="text/javascript" src="http://maps.google.com/maps/api/js?<?php
-      if ($encoded_path) print 'libraries=geometry&';
+      if (isset($_GET['p'])) print 'libraries=geometry&';
       ?>sensor=true"></script>
     <?php endif; ?>
     <?php if ($maplib == $JS_MAP_OPEN_LAYERS): ?>
@@ -60,7 +59,11 @@ $encoded_path = (isset($_GET['p'])) ? "'" . $_GET['p'] . "'" : false;
       $(document).ready(function() {
         toe.init({
           archive: <?php print $archive_id; ?>,
-          encodedPath: <?php print $encoded_path ? $encoded_path : 'null'; ?>,
+          <?php
+          if (isset($_GET['p'])) {
+            print 'encodedPath: ' . json_encode($_GET['p']) . ',';
+          }
+          ?>
           tileSources: tileSources,
         });
       });

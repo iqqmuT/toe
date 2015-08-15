@@ -135,14 +135,19 @@ var toe = {
 
   // create new area
   _showEncodedPath: function(encodedPath) {
-    var path = toe.map.encoding.decodePath(encodedPath);
-    if (path) {
-      var area = new toe.Area(null, '', '', path);
-      toe.AreaManager.add(area);
-      toe.AreaManager.show();
-      toe.map.fitBounds();
-      toe.setReadonly(true);
+    if (encodedPath && !$.isArray(encodedPath)) {
+      encodedPath = $.makeArray(encodedPath);
     }
+    for (var i = 0; i < encodedPath.length; i++) {
+      var path = toe.map.encoding.decodePath(encodedPath[i]);
+      if (path) {
+        var area = new toe.Area(null, '', '', path);
+        toe.AreaManager.add(area);
+      }
+    }
+    toe.AreaManager.show();
+    toe.map.fitBounds();
+    toe.setReadonly(true);
   },
 
   _openArchive: function(id) {
@@ -660,7 +665,7 @@ toe.dialog = {
           var encodedPath = toe.AreaManager.areas[0].encodePath();
           encodedPath = encodedPath.replace(/&/g, '%26'); // URL encode
           var archive_url = document.URL.split('?')[0];
-          archive_url += '?p=' + encodedPath;
+          archive_url += '?p[]=' + encodedPath;
           $("#print_archive_url").val(archive_url);
           $('#print_form').trigger('submit', true);
         }
