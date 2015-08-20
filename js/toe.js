@@ -682,6 +682,7 @@ toe.dialog = {
         }
         else {
           // no areas to be saved
+          $('#print_archive_url').val('');
           $('#print_form').trigger('submit', true);
         }
         return false;
