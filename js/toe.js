@@ -47,6 +47,7 @@ var toe = {
     readonly: false,
     geolocation_interval: 3000,// interval for getting current position
     tileSources: {},           // tile sources
+    max_encoded_url_length: 128, // max encoded path URL length
   },
 
   init: function(options) {
@@ -661,27 +662,52 @@ toe.dialog = {
         return true;
       }
       else {
-        if (false && toe.AreaManager.areas.length === 1) {
-          var encodedPath = toe.AreaManager.areas[0].encodePath();
-          encodedPath = encodedPath.replace(/&/g, '%26'); // URL encode
-          var archive_url = document.URL.split('?')[0];
-          archive_url += '?p[]=' + encodedPath;
-          $("#print_archive_url").val(archive_url);
-          $('#print_form').trigger('submit', true);
+        if (toe.AreaManager.areas.length > 0) {
+          var encoded_url = generateEncodedPathURL();
+          if (encoded_url && encoded_url.length <= toe.options.max_encoded_url_length) {
+            // generate QR code with encoded paths URL
+            $("#print_archive_url").val(encoded_url);
+            $('#print_form').trigger('submit', true);
+          }
+          else {
+            // archive
+            toe.AreaManager.archive().success(function(id) {
+              $("#print_archive_id").val(id);
+              var archive_url = document.URL.split('?')[0];
+              archive_url += '?a=' + id;
+              $("#print_archive_url").val(archive_url);
+              $('#print_form').trigger('submit', true);
+            });
+          }
         }
         else {
-          // archive first
-          toe.AreaManager.archive().success(function(id) {
-            $("#print_archive_id").val(id);
-            var archive_url = document.URL.split('?')[0];
-            archive_url += '?a=' + id;
-            //console.log('archive url:', archive_url);
-            $("#print_archive_url").val(archive_url);
-            $('#print_form').trigger('submit', true);
-          });
+          // no areas to be saved
+          $('#print_form').trigger('submit', true);
         }
         return false;
       }
+    };
+
+    var generateEncodedPathURL = function() {
+      var urlEncodePath = function(path) {
+        return path.replace(/&/g, '%26');
+      };
+      var encoded_paths = toe.AreaManager.encodePaths(true);
+      if (encoded_paths) {
+        var url = document.URL.split('?')[0] + '?';
+        if (encoded_paths.length == 1) {
+          url += 'p=' + urlEncodePath(encoded_paths[0]);
+        }
+        else {
+          var params = [];
+          for (var i = 0; i < encoded_paths.length; i++) {
+            params.push('p[]=' + urlEncodePath(encoded_paths[i]));
+          }
+          url += params.join('&');
+        }
+        return url;
+      }
+      return null;
     };
   },
 
@@ -1227,6 +1253,19 @@ toe.AreaManager = new function() {
       data: this.toJSON(true)
     });
     return jqxhr;
+  };
+
+  // returns array of encoded paths
+  this.encodePaths = function(only_selected_area) {
+    var areas = this.areas;
+    if (only_selected_area && this.active_area) {
+      areas = [ this.active_area ];
+    }
+    var encoded_paths = [];
+    for (var i = 0; i < areas.length; i++) {
+      encoded_paths.push(areas[i].encodePath());
+    }
+    return encoded_paths;
   };
 };
 
