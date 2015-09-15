@@ -89,7 +89,7 @@ class KMLGenerator {
  
         $coordinates = $this->dom->createElement("coordinates");
         $linear_ring->appendChild($coordinates);
-        $coordinates->textContent = $this->createPolygonCoordinates($area->path);
+        $coordinates->nodeValue = $this->createPolygonCoordinates($area->path);
    }
 
    function createPolygonCoordinates($path) {
