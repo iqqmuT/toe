@@ -104,7 +104,7 @@ class KMLGenerator {
 
     function addTag($parent, $tag, $content) {
         $elem = $this->dom->createElement($tag);
-        $elem->textContent = $content;
+        $elem->nodeValue = $content;
         $parent->appendChild($elem);
         return $elem;
     }
