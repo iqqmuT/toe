@@ -24,5 +24,6 @@
 require("config.php");
 include("util.php");
 include("osm.php");
+include("kml.php");
 
 ?>

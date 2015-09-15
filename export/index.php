@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright 2012 Arno Teigseth, Tuomas Jaakola
+ * Copyright 2012-2015 Arno Teigseth, Tuomas Jaakola
  * 
  * This file is part of TOE.
  *
@@ -47,6 +47,9 @@ $export = null;
 if (!strcmp("osm", $format)) {
     // export data in OSM format
     $export = new OSMExport($pois, $areas, $qrcode);
+}
+elseif (!strcmp("kmz", $format)) {
+    $export = new KMZExport($pois, $areas, $qrcode);
 }
 elseif (!strcmp("pdf", $format)) {
     $export = new MapnikPDFExport($pois, $areas, $qrcode);
@@ -142,6 +145,43 @@ class OSMExport extends ExportBase {
 
     function genFilename() {
         return strftime("area_%Y-%m-%d_%H%M%S.osm"); // 'area_2010-10-28180603.osm'
+    }
+}
+
+// KMZ Exporter
+class KMZExport extends ExportBase {
+    private $dom;
+
+    function getFiletype() {
+        return "application/vnd.google-earth.kmz";
+    }
+
+    function export() {
+        $kml = new KMLGenerator($this->pois, $this->areas);
+        $this->dom = $kml->generateDOM();
+        return true;
+    }
+
+    function getContent() {
+        // KMZ is zipped doc.kml file
+        // create temporary ZIP file and write XML there
+        $xml = $this->dom->saveXML();
+
+        $zip_name = tempnam('/tmp/', 'kml');
+        $zip = new ZipArchive();
+        if ($zip->open($zip_name, ZipArchive::CREATE) !== true) {
+            // error when creating temp zip, dump xml
+            return $xml;
+        }
+        $zip->addFromString('doc.kml', $xml);
+        $zip->close();
+        $content = file_get_contents($zip_name);
+        unlink($zip_name);
+        return $content;
+    }
+
+    function genFilename() {
+        return strftime("area_%Y-%m-%d_%H%M%S.kmz"); // 'area_2010-10-28180603.kmz'
     }
 }
 

@@ -86,7 +86,8 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
       <form action="export/" method="post" id="export_form">
         <input type="hidden" name="bbox" value="" id="export_map_bounds" />
         <?php print tr("Choose format"); ?>:<br />
-        <input type="radio" name="format" value="osm" checked="" id="export_format_osm"> <label for="export_format_osm">OSM (Openstreetmap)</label><br /><br />
+        <input type="radio" name="format" value="osm" checked="" id="export_format_osm"> <label for="export_format_osm">OSM (Openstreetmap)</label><br />
+        <input type="radio" name="format" value="kmz" checked="" id="export_format_kmz"> <label for="export_format_kmz">KMZ (Google Earth)</label><br /><br />
         <textarea id="pois_json" name="pois" style="display:none"></textarea>
         <textarea id="areas_json" name="areas" style="display:none"></textarea>
         <input type="submit" name="" value="<?php print tr('Save') ?>" id="save_button" class="button" />
