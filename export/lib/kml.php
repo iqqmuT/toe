@@ -58,7 +58,11 @@ class KMLGenerator {
         $this->addtag($line_style, 'color', 'ff0000ff');
         $this->addtag($line_style, 'width', '2');
         $style->appendChild($line_style);
-    }
+
+        $poly_style = $this->dom->createElement('PolyStyle');
+        $this->addtag($poly_style, 'color', '000000ff');
+        $style->appendChild($poly_style);
+   }
 
     // convert each Area object to XML
     function handleAreas($parent_node) {
@@ -86,7 +90,7 @@ class KMLGenerator {
 
         $linear_ring = $this->dom->createElement("LinearRing");
         $boundaries->appendChild($linear_ring);
- 
+
         $coordinates = $this->dom->createElement("coordinates");
         $linear_ring->appendChild($coordinates);
         $coordinates->nodeValue = $this->createPolygonCoordinates($area->path);
