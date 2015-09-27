@@ -302,6 +302,8 @@ class TileLayer(Layer):
         self.ctx.set_source_surface(img, int(1 / zoom * coord_nw.x), int(1 / zoom * coord_nw.y))
         self.ctx.paint()
         self.ctx.restore()
+        # free memory
+        del img
 
 
 class MapnikRenderer:
