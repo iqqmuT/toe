@@ -5,6 +5,8 @@
 # Example:
 # cd ~/mapnik-stylesheets
 # echo '{"areas":[],"pois":[]}' | ../www/toe/export/mapnik/render.py -b "((61.477925877956785, 21.768811679687474), (61.488948601502614, 21.823743320312474))" -s 144x93
+# force divisions to use float
+from __future__ import division
 import sys, os
 import mapnik2
 import cairo
@@ -477,10 +479,17 @@ class MapnikRenderer:
     def _get_sizes(self):
         self.paper_size = self.style.get_px('paper_size')
         self.map_size = self.style.get_px('map_size')
-        if self.style.get('orientation') == 'auto' and self.merc_bbox.width() / self.merc_bbox.height() < 1:
-            # change orientation
-            self.paper_size.reverse()
-            self.map_size.reverse()
+        if self.style.get('orientation') == 'auto':
+            bbox_landscape = self.merc_bbox.width() / self.merc_bbox.height() > 1
+            map_landscape = self.map_size[0] / self.map_size[1] > 1
+            # change map orientation if needed
+            if (bbox_landscape and not map_landscape) or (not bbox_landscape and map_landscape):
+                self.map_size.reverse()
+
+            paper_landscape = self.paper_size[0] / self.paper_size[1] > 1
+            # change paper orientation if needed
+            if (bbox_landscape and not paper_landscape) or (not bbox_landscape and paper_landscape):
+                self.paper_size.reverse()
 
     def get_output(self):
         return self.output_file
