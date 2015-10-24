@@ -28,6 +28,18 @@
   "qrcode_margin":     [ 1, 1 ]
 },
 
+"a5": {
+  "name":              "A5",
+  "unit":              "mm",
+  "paper_size":        [ 210, 148 ],
+  "margin":            [ 10, 10 ],
+  "map_size":          [ 190, 128 ],
+  "area_border_color": [ 0.8, 0.0, 0.0, 0.5 ],
+  "area_border_width": 4,
+  "zoom":              0.7,
+  "orientation":       "auto"
+},
+
 "a4": {
   "name":              "A4",
   "paper_size":        [ 842, 595 ],
