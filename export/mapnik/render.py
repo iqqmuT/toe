@@ -241,12 +241,16 @@ class CustomMapLayer(Layer):
 
             width = self.m.width
             indexing = self.tiles.get('indexing')
+            max_zoom = self.tiles.get('maxZoom')
             if indexing == 'google':
-                self.tileloader = GoogleTileLoader(min_lat, min_lon, max_lat, max_lon, width)
+                self.tileloader = GoogleTileLoader(
+                        min_lat, min_lon, max_lat, max_lon, width, max_zoom)
             elif indexing == 'tms':
-                self.tileloader = TMSTileLoader(min_lat, min_lon, max_lat, max_lon, width)
+                self.tileloader = TMSTileLoader(
+                        min_lat, min_lon, max_lat, max_lon, width, max_zoom)
             elif indexing == 'f':
-                self.tileloader = FTileLoader(min_lat, min_lon, max_lat, max_lon, width)
+                self.tileloader = FTileLoader(
+                        min_lat, min_lon, max_lat, max_lon, width, max_zoom)
 
     def draw(self):
         # clip drawing area, so everything out will be clipped
@@ -265,6 +269,10 @@ class CustomMapLayer(Layer):
         url = self.tiles.get('url')
         http_headers = self.tiles.get('http_headers')
         tile_files = self.tileloader.download(self.cache_dir, url, http_headers)
+        if tile_files is None:
+            sys.stderr.write("Error when downloading map tiles. Please try again later.\n")
+            sys.exit(1)
+
         for filename in tile_files:
             tile = TileLayer(self.renderer, filename, self.mercator)
             tiles.append(tile)

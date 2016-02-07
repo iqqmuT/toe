@@ -1,5 +1,5 @@
 """
-Copyright 2013 Tuomas Jaakola
+Copyright 2013-2016 Tuomas Jaakola
 
 This file is part of TOE.
 
@@ -21,18 +21,18 @@ http://www.maptiler.org/google-maps-coordinates-tile-bounds-projection/
 
 """
 
-
+import sys
 import os
 import math
+import imghdr
 from globalmaptiles import GlobalMercator
 from downloader import Downloader
 
 class TileLoader(object):
     TILE_WIDTH = 256 # tile is square
-    MAX_ZOOM = 18
     TILE_FORMAT = 'png'
 
-    def __init__(self, min_lat, min_lon, max_lat, max_lon, width):
+    def __init__(self, min_lat, min_lon, max_lat, max_lon, width, max_zoom = 18):
         self.tiles = []
         self.min_lat = min_lat
         self.min_lon = min_lon
@@ -42,21 +42,32 @@ class TileLoader(object):
         self.downloader = Downloader()
         # count how many horizontal tiles we need
         self.x_tiles_needed = math.ceil(width / self.TILE_WIDTH)
+        self.max_zoom = max_zoom
 
     def download(self, cache_dir, url, http_headers):
         """Downloads tiles and returns list of downloaded tiles."""
-        tile_files = []
+        tile_files = {}
         tiles = self._get_tile_list()
         for (tx, ty, tz) in tiles:
             cx, cy, cz = self._convert_tile(tx, ty, tz)
             tile_url = url.replace('{x}', str(cx)).replace('{y}', str(cy)).replace('{z}', str(cz))
             tile_file = self._gen_tile_file(tx, ty, tz, cache_dir)
             self.downloader.download(tile_file, tile_url, http_headers)
-            tile_files.append(tile_file)
+            tile_files[tile_url] = tile_file
 
         # wait downloads to be finished
         self.downloader.wait()
-        return tile_files
+
+        # validate all tiles
+        valid = True
+        for tile_url, tile_file in tile_files.iteritems():
+            if self.TILE_FORMAT == 'png' and imghdr.what(tile_file) != 'png':
+                sys.stderr.write("%s is not PNG image\n" % tile_url)
+                valid = False
+        if not valid:
+            return None
+
+        return tile_files.values()
 
     def _get_tile_list(self):
         """Returns list of tiles needed to cover bounding box."""
@@ -70,15 +81,14 @@ class TileLoader(object):
         return tiles
 
     def _find_tiles(self):
-        """Returns maximum zoom level based on given width."""
-        for zoom_level in range(1, self.MAX_ZOOM + 1):
+        """Returns optimal zoom level based on given width."""
+        for zoom_level in range(1, self.max_zoom + 1):
             tminx, tminy = self._lat_lon_to_tile(self.min_lat, self.min_lon, zoom_level)
             tmaxx, tmaxy = self._lat_lon_to_tile(self.max_lat, self.max_lon, zoom_level)
             x_tiles = tmaxx + 1 - tminx
-            if x_tiles > self.x_tiles_needed:
-                # minimum zoom level found
+            if x_tiles > self.x_tiles_needed or zoom_level == self.max_zoom:
+                # optimal zoom level found
                 return (tminx, tminy, tmaxx, tmaxy, zoom_level)
-        # no suitable zoom level found, maybe too many tiles needed
         return None
 
     def _lat_lon_to_tile(self, lat, lon, zoom_level):

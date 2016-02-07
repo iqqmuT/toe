@@ -1,5 +1,5 @@
 """
-Copyright 2013 Tuomas Jaakola
+Copyright 2013-2016 Tuomas Jaakola
 
 This file is part of TOE.
 
