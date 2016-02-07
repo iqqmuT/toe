@@ -318,7 +318,7 @@ class MapnikRenderer:
 
     STYLES_FILE="styles.json"
     TILES_FILE="tiles.json"
-    COPYRIGHT_TEXT="© OpenStreetMap contributors, CC-BY-SA"
+    COPYRIGHT_TEXT="© OpenStreetMap contributors"
 
     def __init__(self, areas):
         self.areas = areas
@@ -422,7 +422,8 @@ class MapnikRenderer:
             copyright_text = self.tiles.get('copyright', None)
             if copyright_text is not None:
                 copyright_text = copyright_text['export']
-                layers.append(CopyrightLayer(self, copyright_text))
+        if copyright_text is not None:
+            layers.append(CopyrightLayer(self, copyright_text))
 
         # QR code layer
         if qrcode and self.style.get('qrcode', True):
