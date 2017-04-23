@@ -38,6 +38,7 @@ $.widget("ui.dialog", $.extend({}, $.ui.dialog.prototype, {
 var toe = {
 
   options: {
+    mapType: 'OSM',            // initial map type
     single_click_timeout: 400, // timeout in ms
     snap_vertices: 5,          // snap to other vertex within 5 px range
     cookie_name: 'toe',        // cookie name
@@ -675,6 +676,8 @@ toe.dialog = {
               $("#print_archive_id").val(id);
               var archive_url = document.URL.split('?')[0];
               archive_url += '?a=' + id;
+              archive_url += '&m=' + $('#print_map_source').val();
+
               $("#print_archive_url").val(archive_url);
               $('#print_form').trigger('submit', true);
             });
@@ -706,6 +709,7 @@ toe.dialog = {
           }
           url += params.join('&');
         }
+        url += '&m=' + $('#print_map_source').val();
         return url;
       }
       return null;

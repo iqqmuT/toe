@@ -30,23 +30,34 @@ toe.map = {
     }
 
     // Available maps
-    var defaultMap = 'OSM';
+    var osmMapTypeId = 'OSM';
     var mapTypeIds = [
-      defaultMap,
+      osmMapTypeId,
       google.maps.MapTypeId.ROADMAP,
       google.maps.MapTypeId.HYBRID,
       google.maps.MapTypeId.SATELLITE,
       google.maps.MapTypeId.TERRAIN
     ];
     for (var name in toe.options.tileSources) {
-      if (name === defaultMap)
+      if (name === osmMapTypeId)
         continue; // already in list
       mapTypeIds.push(name);
     }
+
+    // set initial map type from options or default to OSM
+    var getInitMapTypeId = function() {
+      for (var i = 0; i < mapTypeIds.length; i++) {
+        if (toe.options.mapType === mapTypeIds[i]) {
+          return mapTypeIds[i];
+        }
+      }
+      return osmMapTypeId;
+    };
+
     var mapOptions = {
       zoom: 4,
       center: center,
-      mapTypeId: defaultMap,
+      mapTypeId: getInitMapTypeId(),
       mapTypeControlOptions: {
         mapTypeIds: mapTypeIds,
         style: google.maps.MapTypeControlStyle.DROPDOWN_MENU

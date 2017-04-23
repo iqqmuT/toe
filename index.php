@@ -63,6 +63,11 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
           if (isset($_GET['p'])) {
             print 'encodedPath: ' . json_encode($_GET['p']) . ',';
           }
+
+          // initial map to be used
+          if (isset($_GET['m'])) {
+            print "mapType: '" . $_GET['m'] . "',";
+          }
           ?>
           tileSources: tileSources,
         });
@@ -110,7 +115,7 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
             <tr>
               <td><?php print tr("Map"); ?>:</td>
               <td>
-                <select name="map-source">
+                <select name="map-source" id="print_map_source">
                   <?php
                   $sources = json_decode($cfg['tile_sources_json'], true);
                   foreach ($sources as $key => $source):
