@@ -31,22 +31,22 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
     <link rel="icon" type="image/png" href="images/toe-icon.png" />
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link type="text/css" href="http://code.jquery.com/ui/1.10.2/themes/ui-darkness/jquery-ui.css" rel="stylesheet" />
+    <link type="text/css" href="https://code.jquery.com/ui/1.10.2/themes/ui-darkness/jquery-ui.css" rel="stylesheet" />
     <link type="text/css" href="css/toe.css?v=1.0" rel="stylesheet" />
     <?php if ($maplib == $JS_MAP_GOOGLE): ?>
-      <script type="text/javascript" src="http://maps.google.com/maps/api/js?<?php
+      <script type="text/javascript" src="https://maps.google.com/maps/api/js?<?php
       if (isset($_GET['p'])) print 'libraries=geometry&';
       ?>sensor=true"></script>
     <?php endif; ?>
     <?php if ($maplib == $JS_MAP_OPEN_LAYERS): ?>
-      <script src="http://www.openlayers.org/api/OpenLayers.js" type="text/javascript" />
+      <script src="https://www.openlayers.org/api/OpenLayers.js" type="text/javascript" />
     <?php endif; ?>
     <?php if ($maplib == $JS_MAP_LEAFLET): ?>
-      <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
-      <script type="text/javascript" src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+      <link rel="stylesheet" href="https://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+      <script type="text/javascript" src="https://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <?php endif; ?>
-    <script type="text/javascript" src="http://code.jquery.com/jquery-2.0.0.min.js"></script>
-    <script type="text/javascript" src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.0.0.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
     <script type="text/javascript" src="js/i18n.js"></script>
     <script type="text/javascript" src="js/toe.js?v=1.0"></script>
     <script type="text/javascript" src="js/toe-<?php print $maplib; ?>.js?v=1.0"></script>
