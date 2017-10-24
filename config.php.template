@@ -23,4 +23,7 @@ $cfg['export_styles_json'] = file_get_contents('export/mapnik/styles.json');
 // --------------------------------------------------------------
 $cfg['archive_file'] = 'db/archive.sqlite';
 
+$cfg['osm_export_note_en'] = 'OSM printing works only for maps of Ecuador, Estonia and Finland.';
+$cfg['osm_export_note_fi'] = 'OSM-tulostus toimii vain seuraavilla kartoilla: Ecuador, Viro, Suomi.';
+
 ?>

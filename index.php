@@ -71,7 +71,22 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
           ?>
           tileSources: tileSources,
         });
+
+        $('#print_map_source').on('change', function() {
+          toggleOSMExportNote();
+        });
+        toggleOSMExportNote();
       });
+
+      // Shows or hides note for OSM export (defined in config)
+      function toggleOSMExportNote() {
+        var note = $('#osm-export-note');
+        if ($('#print_map_source').val() === 'OSM') {
+          note.show();
+        } else {
+          note.hide();
+        }
+      }
     </script>
     <title>TOE</title>
   </head>
@@ -125,6 +140,14 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
                 </select>
               </td>
             </tr>
+
+            <?php if (isset($cfg['osm_export_note_' . $lang])): ?>
+              <tr id="osm-export-note">
+                <td></td>
+                <td><?php echo $cfg['osm_export_note_' . $lang]; ?></td>
+              </tr>
+            <?php endif; ?>
+
             <tr>
               <td><?php print tr("Format"); ?>:</td>
               <td>
