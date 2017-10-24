@@ -94,7 +94,7 @@ function get_qrcode() {
 // --------------
 
 class ExportBase {
-    public $pois, $areas, $bounds, $filetype, $error;
+    public $pois, $areas, $number, $bounds, $filetype, $error;
     
     public function __construct($pois, $areas, $qrcode) {
         $this->pois = $pois;
@@ -102,6 +102,11 @@ class ExportBase {
         $this->bounds = array();
         $this->qrcode = $qrcode;
         $this->error = '';
+
+        // set number if there is just one area with number
+        if (count($this->areas) == 1 && $this->areas[0]->number) {
+          $this->number = $this->areas[0]->number;
+        }
     }
 
     function printOutput() {
@@ -123,6 +128,17 @@ class ExportBase {
         header('HTTP/1.0 500 Internal Server Error', true, 500);
         echo str_replace("\n", "<br>", $this->getError());
     }
+
+    // Return string in format 'map-<number>_2010-10-28_180603.<ext>'
+    protected function genFilenameWithExt($ext) {
+        $prefix = "map";
+        if ($this->number) {
+            $prefix .= "-";
+            // remove "special" characters from filename
+            $prefix .= preg_replace("([\s\.~,;:\[\]\(\]])", '', $this->number);
+        }
+        return strftime($prefix . "_%Y-%m-%d_%H%M%S." . $ext);
+    }
 }
 
 // OSM Exporter 
@@ -143,8 +159,9 @@ class OSMExport extends ExportBase {
         return $this->dom->saveXML();
     }
 
+    // Returns string in format 'map-<number>_2010-10-28-180603.osm'
     function genFilename() {
-        return strftime("area_%Y-%m-%d_%H%M%S.osm"); // 'area_2010-10-28180603.osm'
+        return $this->genFilenameWithExt("osm");
     }
 }
 
@@ -181,7 +198,7 @@ class KMZExport extends ExportBase {
     }
 
     function genFilename() {
-        return strftime("area_%Y-%m-%d_%H%M%S.kmz"); // 'area_2010-10-28180603.kmz'
+        return $this->genFilenameWithExt("kmz");
     }
 }
 
@@ -274,8 +291,9 @@ class MapnikPDFExport extends MapnikExport {
         return "application/pdf";
     }
 
+    // Returns filename in format 'map_<number>_2010-10-28_180623.pdf
     function genFilename() {
-        return strftime("map_%Y-%m-%d_%H%M%S.pdf"); // 'area_2010-10-28180603.pdf'
+        return $this->genFilenameWithExt("pdf");
     }
 }
 
@@ -285,8 +303,9 @@ class MapnikSVGExport extends MapnikExport {
         return "image/svg+xml";
     }
 
+    // Returns filename in format 'map_<number>_2010-10-28_180623.svg
     function genFilename() {
-        return strftime("map_%Y-%m-%d_%H%M%S.svg"); // 'area_2010-10-28180603.svg'
+        return $this->genFilenameWithExt("svg");
     }
 }
 
