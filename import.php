@@ -24,7 +24,7 @@ $name = $_FILES['import_file']['name'];
 $file = $_FILES['import_file']['tmp_name'];
 
 // try to guess the format from the filename extension (ugly, urf!)
-$extension = get_filename_extension($name);
+$extension = strtolower(get_filename_extension($name));
 $import = null;
 if (!strcmp($extension, "osm")) {
     // OSM Import
