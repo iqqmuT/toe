@@ -185,6 +185,42 @@ class AreaLayer(Layer):
         self.ctx.close_path()
 
 
+class AreaInfoLayer(Layer):
+    def __init__(self, renderer, areas):
+        super(AreaInfoLayer, self).__init__(renderer)
+        if len(areas) == 1:
+            area = areas[0]
+            self.text = area['number']
+            if len(area['name']):
+                if len(self.text):
+                    self.text += ' - '
+                self.text += area['name']
+
+    def draw(self):
+        if not self.text or len(self.text) == 0:
+            return
+
+        self.ctx.save()
+        zoom = 1
+        self.ctx.scale(zoom, zoom)
+
+        self.ctx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
+            cairo.FONT_WEIGHT_NORMAL)
+        self.ctx.set_font_size(6)
+        xbearing, ybearing, width, height, xadvance, yadvance = self.ctx.text_extents(self.text)
+
+        margin = self.style.get_px('info_margin', [ 2, 2 ])
+        self.ctx.rectangle(0, 0, margin[0] * 2 + width, margin[1] * 2 + height)
+        self.ctx.set_source_rgba(1, 1, 1, 0.9)
+        self.ctx.fill()
+
+        x = margin[0]
+        y = margin[1] + height
+        self.ctx.move_to(x, y)
+        self.ctx.set_source_rgba(0, 0, 0, 1)
+        self.ctx.show_text(self.text)
+        self.ctx.restore()
+
 class CopyrightLayer(Layer):
     def __init__(self, renderer, text):
         super(CopyrightLayer, self).__init__(renderer)
@@ -415,6 +451,9 @@ class MapnikRenderer:
 
         # area borders layer
         layers.append(AreaLayer(self, self.areas))
+
+        # area info layer: single area number and name
+        layers.append(AreaInfoLayer(self, self.areas))
 
         # copyright layer
         copyright_text = self.COPYRIGHT_TEXT
