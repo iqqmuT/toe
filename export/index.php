@@ -135,7 +135,7 @@ class ExportBase {
         if ($this->number) {
             $prefix .= "-";
             // remove "special" characters from filename
-            $prefix .= preg_replace("([\s\.~,;:\[\]\(\]])", '', $this->number);
+            $prefix .= preg_replace("([\s\.~,;:])", '', $this->number);
         }
         return strftime($prefix . "_%Y-%m-%d_%H%M%S." . $ext);
     }
