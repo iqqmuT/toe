@@ -188,6 +188,7 @@ class AreaLayer(Layer):
 class AreaInfoLayer(Layer):
     def __init__(self, renderer, areas):
         super(AreaInfoLayer, self).__init__(renderer)
+        self.text = ''
         if len(areas) == 1:
             area = areas[0]
             self.text = area['number']
@@ -197,7 +198,7 @@ class AreaInfoLayer(Layer):
                 self.text += area['name']
 
     def draw(self):
-        if not self.text or len(self.text) == 0:
+        if len(self.text) == 0:
             return
 
         self.ctx.save()
