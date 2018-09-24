@@ -550,6 +550,5 @@ toe.map.encoding.encodePath = function(path) {
 };
 
 toe.map.encoding.decodePath = function(path) {
-  console.log(google.maps);
   return google.maps.geometry.encoding.decodePath(path);
 };

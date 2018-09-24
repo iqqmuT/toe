@@ -10,6 +10,7 @@ $JS_MAP_OPEN_LAYERS = 'open_layers';
 $JS_MAP_LEAFLET     = 'leaflet';
 
 $cfg['js_map_library'] = $JS_MAP_GOOGLE;
+$cfg['google_api_key'] = ''; // Your Google API key
 
 // tile sources as JSON
 $cfg['tile_sources_json'] = file_get_contents('export/mapnik/tiles.json');

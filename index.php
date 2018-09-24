@@ -34,9 +34,9 @@ $archive_id = (isset($_GET['a'])) ? "'" . $_GET['a'] . "'" : 'null';
     <link type="text/css" href="https://code.jquery.com/ui/1.10.2/themes/ui-darkness/jquery-ui.css" rel="stylesheet" />
     <link type="text/css" href="css/toe.css?v=1.0" rel="stylesheet" />
     <?php if ($maplib == $JS_MAP_GOOGLE): ?>
-      <script type="text/javascript" src="https://maps.google.com/maps/api/js?<?php
-      if (isset($_GET['p'])) print 'libraries=geometry&';
-      ?>sensor=true"></script>
+      <script type="text/javascript" src="//maps.googleapis.com/maps/api/js?key=<?php print $cfg['google_api_key']; ?><?php
+        if (isset($_GET['p'])) print '&libraries=geometry';
+      ?>"></script>
     <?php endif; ?>
     <?php if ($maplib == $JS_MAP_OPEN_LAYERS): ?>
       <script src="https://www.openlayers.org/api/OpenLayers.js" type="text/javascript" />
