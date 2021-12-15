@@ -21,6 +21,7 @@ import sys
 import Queue
 import threading
 import urllib3
+import traceback
 
 class DownloadThread(threading.Thread):
     def __init__(self, manager, queue):
@@ -32,14 +33,16 @@ class DownloadThread(threading.Thread):
         while True:
             # get url and headers from queue
             data = self.queue.get()
-            r = self.manager.request(method='GET', url=data['url'], headers=data['headers'])
             # write output to a file
             try:
+                r = self.manager.request(method='GET', url=data['url'], headers=data['headers'])
                 f = open(data['output'], 'w')
                 f.write(r.data)
                 f.close()
             except IOError as e:
                 sys.stderr.write('Could not save file: ' + str(e) + "\n")
+            except Exception as e:
+                sys.stderr.write(traceback.format_exc())
             self.queue.task_done()
 
 class Downloader(object):
