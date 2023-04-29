@@ -61,7 +61,8 @@ var toe = {
     $.extend(this.options, options);
 
     // on window close, check if it's ok
-    window.onbeforeunload = this.destroy;
+    // disabled for now because it is broken
+    // window.onbeforeunload = this.destroy;
 
     // initialize map
     this.map.init();
