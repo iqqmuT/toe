@@ -79,6 +79,13 @@ class KMLGenerator {
 
         if ($area->name && strlen($area->name)) {
             $this->addTag($placemark, 'name', $area->name);
+            // for territory helper
+            $this->addTag($placemark, 'territoryType', $area->name);
+        }
+
+        if (isset($area->number) && strcmp($area->number, 'undefined')) {
+           // for territory helper
+           $this->addTag($placemark, 'territoryNumber', $area->number);
         }
         $this->addTag($placemark, 'styleUrl', '#area');
 
