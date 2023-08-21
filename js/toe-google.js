@@ -234,28 +234,23 @@ toe.map.tileIndexing = {
 /**
  * InfoWindow
  */
-toe.map.InfoWindow = function(options) {
-    this.base = google.maps.InfoWindow;
-    this.base(options);
-};
+toe.map.InfoWindow = class extends google.maps.InfoWindow {
+  show(options) {
+    this.setOptions({
+      content: options.content,
+      position: options.position
+    });
+    this.open(toe.map.map);
 
-toe.map.InfoWindow.prototype = new google.maps.InfoWindow;
+    // callback when ready
+    google.maps.event.addListener(this, 'domready', function() {
+      options.ready();
+    });
+  }
 
-toe.map.InfoWindow.prototype.show = function(options) {
-  this.setOptions({
-    content: options.content,
-    position: options.position
-  });
-  this.open(toe.map.map);
-
-  // callback when ready
-  google.maps.event.addListener(this, 'domready', function() {
-    options.ready();
-  });
-};
-
-toe.map.InfoWindow.prototype.hide = function() {
-  this.close();
+  hide() {
+    this.close();
+  }
 };
 
 /**
