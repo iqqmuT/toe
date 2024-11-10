@@ -6,7 +6,7 @@
   "indexing": "google",
   "maxZoom": 19,
   "copyright": {
-    "ui": "&copy; <a href=\"http://osm.org/copyright\">OpenStreetMap contributors</a>",
+    "ui": "&copy; <a href=\"http://osm.org/copyright\" target=\"_blank\">OpenStreetMap contributors</a>",
     "export": "© OpenStreetMap contributors"
   }
 }
