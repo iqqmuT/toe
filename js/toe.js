@@ -1,6 +1,6 @@
 /*
  * Copyright 2012 Arno Teigseth, Tuomas Jaakola
- * 
+ *
  * This file is part of TOE.
  *
  * TOE is free software: you can redistribute it and/or modify
@@ -17,10 +17,10 @@
  * along with TOE.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Main JavaScript file of TOE.
- * 
+ *
  * Requirements:
  *  - jQuery >= 1.7.x
- * 
+ *
  */
 
 // jQuery 1.10 does not allow HTML in dialog titles, this snippet
@@ -354,7 +354,7 @@ toe.control = {
       return $div;
     };
   },
-    
+
   Area: new function() {
 
     // area control
@@ -614,7 +614,7 @@ toe.control = {
 // ------------------------------------------------------------
 toe.dialog = {
 
-  init: function(autoOpen) {  
+  init: function(autoOpen) {
     this.OpenFile.init(autoOpen);
     this.SaveFile.init();
     this.Print.init();
@@ -812,7 +812,7 @@ toe.dialog = {
           if (data.redirect_url) {
             // setting changes require reload!
             window.location = data.redirect_url;
-          }     
+          }
         }
         self.close();
       }, 'json');
@@ -1054,7 +1054,7 @@ toe.handler = {
 toe.AreaManager = new function() {
   var self = this;
   var click_timeout = null;
-  
+
   this.changed = false;
   this.active_area;
   this.areas = [];
@@ -1592,7 +1592,7 @@ toe.Area = function(id, number, name, path) {
   }
 };
 
-// method functions 
+// method functions
 toe.Area.prototype.show = function() { this.polygon.show(); };
 toe.Area.prototype.hide = function() { this.polygon.hide(); };
 
@@ -1970,7 +1970,7 @@ toe.util = {
       }
     }
     if (smallestDistance)
-      return smallestDistance[0];  
+      return smallestDistance[0];
     return 0;
   },
 

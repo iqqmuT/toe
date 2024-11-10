@@ -1,7 +1,7 @@
 <?php
 /*
  * Copyright 2012 Arno Teigseth, Tuomas Jaakola
- * 
+ *
  * This file is part of TOE.
  *
  * TOE is free software: you can redistribute it and/or modify

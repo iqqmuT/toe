@@ -1,6 +1,6 @@
 /*
  * Copyright 2012 Arno Teigseth, Tuomas Jaakola
- * 
+ *
  * This file is part of TOE.
  *
  * TOE is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  * along with TOE.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Localization JavaScript file of TOE.
- * 
+ *
  */
 
 var lang = 'en';          // selected language (English by default)
@@ -30,7 +30,7 @@ function setLanguage(language, json_data) {
 
 function tr(key, param) {
   if (localizations[key] == undefined) return key;
-  
+
   // if there is '%s' in the string, replace it with given param
   var str = localizations[key];
   return str.replace("%s", param);

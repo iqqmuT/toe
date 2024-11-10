@@ -1,6 +1,6 @@
 /*
  * Copyright 2012 Arno Teigseth, Tuomas Jaakola
- * 
+ *
  * This file is part of TOE.
  *
  * TOE is free software: you can redistribute it and/or modify
@@ -17,11 +17,11 @@
  * along with TOE.  If not, see <http://www.gnu.org/licenses/>.
  *
  * JavaScript for TOE, functionalities for print page.
- * 
+ *
  * Requirements:
  *  - Google Maps JavaScript API v3
  *  - jQuery 1.4.x
- * 
+ *
  */
 
 // Global variables
@@ -66,14 +66,14 @@ function initialize(center, zoom, map_type) {
     mapTypeControl: true
   };
   map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-  
-  // set OpenStreetMap map type as default  
+
+  // set OpenStreetMap map type as default
   map.mapTypes.set('OSM', osm_map_type);
   map.setMapTypeId(map_type);
-  
+
   importAreas();
   importPois();
-  
+
   // automatically fit all stuff to our map
   var bounds = getBounds();
   if (!bounds.isEmpty()) {
@@ -143,7 +143,7 @@ if (!google.maps.Polygon.prototype.getBounds) {
     var bounds = new google.maps.LatLngBounds();
     var paths = this.getPaths();
     var path;
-    
+
     for (var p = 0; p < paths.getLength(); p++) {
       path = paths.getAt(p);
       for (var i = 0; i < path.getLength(); i++) {

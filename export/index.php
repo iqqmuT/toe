@@ -1,7 +1,7 @@
 <?php
 /*
  * Copyright 2012-2015 Arno Teigseth, Tuomas Jaakola
- * 
+ *
  * This file is part of TOE.
  *
  * TOE is free software: you can redistribute it and/or modify
@@ -95,7 +95,7 @@ function get_qrcode() {
 
 class ExportBase {
     public $pois, $areas, $number, $bounds, $filetype, $error;
-    
+
     public function __construct($pois, $areas, $qrcode) {
         $this->pois = $pois;
         $this->areas = $areas;
@@ -141,7 +141,7 @@ class ExportBase {
     }
 }
 
-// OSM Exporter 
+// OSM Exporter
 class OSMExport extends ExportBase {
     private $dom;
 

@@ -1,6 +1,6 @@
 /*
  * Copyright 2012 Arno Teigseth, Tuomas Jaakola
- * 
+ *
  * This file is part of TOE.
  *
  * TOE is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  * along with TOE.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Leaflet integration file of TOE.
- * 
+ *
  */
 
 toe.map = {
@@ -309,7 +309,7 @@ toe.map.Polygon.prototype.containsLatLng = function(latLng) {
     var numPoints = path.getLength();
     var j = numPoints-1;
 
-    for(var i=0; i < numPoints; i++) { 
+    for(var i=0; i < numPoints; i++) {
       var vertex1 = path.getAt(i);
       var vertex2 = path.getAt(j);
 

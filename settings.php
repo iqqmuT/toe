@@ -1,7 +1,7 @@
 <?php
 /*
  * Copyright 2012 Arno Teigseth, Tuomas Jaakola
- * 
+ *
  * This file is part of TOE.
  *
  * TOE is free software: you can redistribute it and/or modify
@@ -44,7 +44,7 @@ print json_encode($data);
 
 // save setting to a cookie
 function save_setting($key, $value) {
-    // set cookie epxire time to be expired on 2 year 
+    // set cookie expire time to be expired on 2 year
     $expire = time() + (60 * 60 * 24 * 365 * 2);
     setcookie($key, $value, $expire);
 }
