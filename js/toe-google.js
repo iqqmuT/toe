@@ -321,15 +321,15 @@ toe.map.getLatLngBoundsByString = function(str) {
 /**
  * Polygon
  */
-toe.map.Polygon = function(options) {
-  this.base = google.maps.Polygon;
-  this.base(options);
 
-  // add click listener to polygon
-  google.maps.event.addListener(this, 'click', options.clicked);
-  google.maps.event.addListener(this, 'dblclick', options.dblclicked);
-};
-toe.map.Polygon.prototype = new google.maps.Polygon;
+class ToePolygon extends google.maps.Polygon {
+  constructor(options) {
+    super(options);
+    this.addListener('click', options.clicked);
+    this.addListener('dblclick', options.dblclicked);
+  }
+}
+toe.map.Polygon = ToePolygon;
 
 toe.map.Polygon.prototype.show = function() {
   this.setMap(toe.map.map);
@@ -440,11 +440,8 @@ toe.map.Polygon.prototype.getToePath = function() {
 /**
  * Rectangle
  */
-toe.map.Rectangle = function(options) {
-  this.base = google.maps.Rectangle;
-  this.base(options);
-};
-toe.map.Rectangle.prototype = new google.maps.Rectangle;
+class ToeRectangle extends google.maps.Rectangle {}
+toe.map.Rectangle = ToeRectangle;
 
 toe.map.Rectangle.prototype.show = function(bounds) {
   this.setMap(toe.map.map);
@@ -504,23 +501,22 @@ toe.map.AreaVertexMarker.prototype.setToeLatLng = function(latLng) {
 /**
  * CurrentPositionMarker
  */
-toe.map.CurrentPositionMarker = function(options) {
-  options.map = toe.map.map;
-  options.center = options.position;
-  options.draggable = false;
-  options.clickable = false;
-  options.editable = false;
-  options.fillColor = '#00f';
-  options.fillOpacity = 0.2,
-  options.strokeColor = '#00f';
-  options.strokeOpacity = 0.5;
-  options.strokeWidth = 2;
-
-  this.base = google.maps.Circle;
-  this.base(options);
-};
-
-toe.map.CurrentPositionMarker.prototype = new google.maps.Circle;
+class ToeCircle extends google.maps.Circle {
+  constructor(options) {
+    options.map = toe.map.map;
+    options.center = options.position;
+    options.draggable = false;
+    options.clickable = false;
+    options.editable = false;
+    options.fillColor = '#00f';
+    options.fillOpacity = 0.2,
+    options.strokeColor = '#00f';
+    options.strokeOpacity = 0.5;
+    options.strokeWidth = 2;
+    super(options);
+  }
+}
+toe.map.CurrentPositionMarker = ToeCircle;
 
 toe.map.CurrentPositionMarker.prototype.hide = function() {
   this.setVisible(false);
